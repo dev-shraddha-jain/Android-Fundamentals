@@ -173,38 +173,41 @@
       window.location.hash = path;
     }
 
-    function buildSidebar(readme) {
+    function buildSidebar(structure) {
       try {
-        const sections = [];
-        const lines = readme.split('\n');
-        let currentSection = { title: 'General', links: [{ title: '🏠 Welcome', path: 'README.md' }] };
+        // Clear container
+        navContainer.innerHTML = '';
 
-        lines.forEach(line => {
-          const headerMatch = line.match(/^## (.*)/);
-          if (headerMatch) {
-            if (currentSection.links.length > 0) sections.push(currentSection);
-            currentSection = { title: headerMatch[1].trim(), links: [] };
-          }
-          
-          const linkMatch = line.match(/\[\*\*(.*?)\*\*\]\((.*?\.md)\)/);
-          if (linkMatch) {
-            currentSection.links.push({ title: linkMatch[1], path: linkMatch[2] });
-          }
+        // Sort structure: Root first, then alphabetical
+        structure.sort((a, b) => {
+          if (a.is_root) return -1;
+          if (b.is_root) return 1;
+          return a.path.localeCompare(b.path);
         });
-        sections.push(currentSection);
 
-        navContainer.innerHTML = sections.map(section => `
-          <div class="nav-section">
-            <h2>${section.title}</h2>
-            <ul class="nav-links">
-              ${section.links.map(link => `
-                <li>
-                  <a class="nav-link" data-path="${link.path}" onclick="navigateTo('${link.path}')">${link.title}</a>
-                </li>
-              `).join('')}
-            </ul>
-          </div>
-        `).join('');
+        navContainer.innerHTML = structure.map(folder => {
+          if (folder.files.length === 0) return '';
+          
+          const folderName = folder.is_root ? '🏠 HOME' : folder.path.replace(/\//g, ' › ');
+          
+          return `
+            <div class="nav-section">
+              <h2>${folderName}</h2>
+              <ul class="nav-links">
+                ${folder.files.map(file => {
+                  const displayName = file.name.replace('.md', '').replace(/-/g, ' ');
+                  return `
+                    <li>
+                      <a class="nav-link" data-path="${file.path}" onclick="navigateTo('${file.path}')">
+                        <span class="file-icon">📄</span> ${displayName}
+                      </a>
+                    </li>
+                  `;
+                }).join('')}
+              </ul>
+            </div>
+          `;
+        }).join('');
       } catch (err) {
         console.error('Sidebar build error:', err);
       }
@@ -214,17 +217,33 @@
       try {
         configureMarked();
         
-        const readme = await fetchMarkdown('README.md');
-        buildSidebar(readme);
+        // 1. Fetch structure.json
+        let structure;
+        try {
+          const structureResponse = await fetch('structure.json');
+          if (!structureResponse.ok) throw new Error('Structure file not found');
+          structure = await structureResponse.json();
+        } catch (e) {
+          console.warn('Could not load structure.json, falling back to basic README navigation.', e);
+          // Fallback: If structure.json fails, just show a "Home" link
+          structure = [{ name: 'Home', path: '', files: [{ name: 'README.md', path: 'README.md' }], is_root: true }];
+        }
+        
+        buildSidebar(structure);
 
+        // 2. Initial route
         let initialPath = window.location.hash.slice(1);
-        if (!initialPath || initialPath === '/') initialPath = 'README.md';
+        // Handle root cases
+        if (!initialPath || initialPath === '/' || initialPath === '' || initialPath === '#') {
+          initialPath = 'README.md';
+        }
         
         await renderPage(initialPath);
 
+        // 3. Hash change listener
         window.addEventListener('hashchange', () => {
           let path = window.location.hash.slice(1);
-          if (!path || path === '/') path = 'README.md';
+          if (!path || path === '/' || path === '') path = 'README.md';
           renderPage(path);
         });
       } catch (err) {

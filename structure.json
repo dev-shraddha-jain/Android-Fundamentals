@@ -1,0 +1,162 @@
+[
+  {
+    "name": "Home",
+    "path": "",
+    "files": [
+      {
+        "name": "README.md",
+        "path": "README.md"
+      },
+      {
+        "name": "Storage.md",
+        "path": "Storage.md"
+      },
+      {
+        "name": "WebView.md",
+        "path": "WebView.md"
+      },
+      {
+        "name": "answer.md",
+        "path": "answer.md"
+      },
+      {
+        "name": "JNI.md",
+        "path": "JNI.md"
+      }
+    ],
+    "is_root": true
+  },
+  {
+    "name": "android-architecture",
+    "path": "android-architecture",
+    "files": [
+      {
+        "name": "Architecture.md",
+        "path": "android-architecture/Architecture.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "activity",
+    "path": "android-components/activity",
+    "files": [
+      {
+        "name": "interview.md",
+        "path": "android-components/activity/interview.md"
+      },
+      {
+        "name": "Activity.md",
+        "path": "android-components/activity/Activity.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "content-provider",
+    "path": "android-components/content-provider",
+    "files": [
+      {
+        "name": "ContentProvider.md",
+        "path": "android-components/content-provider/ContentProvider.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "receiver",
+    "path": "android-components/receiver",
+    "files": [
+      {
+        "name": "BroadcastReceiver.md",
+        "path": "android-components/receiver/BroadcastReceiver.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "service",
+    "path": "android-components/service",
+    "files": [
+      {
+        "name": "service-workmanager-jobscheduler.md",
+        "path": "android-components/service/service-workmanager-jobscheduler.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "a-service",
+    "path": "android-components/service/a-service",
+    "files": [
+      {
+        "name": "interview.md",
+        "path": "android-components/service/a-service/interview.md"
+      },
+      {
+        "name": "Service.md",
+        "path": "android-components/service/a-service/Service.md"
+      },
+      {
+        "name": "security-risks.md",
+        "path": "android-components/service/a-service/security-risks.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "workmanger",
+    "path": "android-components/service/workmanger",
+    "files": [
+      {
+        "name": "workmanager.md",
+        "path": "android-components/service/workmanger/workmanager.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "android-manifest",
+    "path": "android-manifest",
+    "files": [
+      {
+        "name": "Manifest.md",
+        "path": "android-manifest/Manifest.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "permissions",
+    "path": "android-manifest/permissions",
+    "files": [
+      {
+        "name": "Permissions.md",
+        "path": "android-manifest/permissions/Permissions.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "intents",
+    "path": "intents",
+    "files": [
+      {
+        "name": "Intents.md",
+        "path": "intents/Intents.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "obfuscate",
+    "path": "obfuscate",
+    "files": [
+      {
+        "name": "ProguardR8.md",
+        "path": "obfuscate/ProguardR8.md"
+      }
+    ],
+    "is_root": false
+  }
+]
