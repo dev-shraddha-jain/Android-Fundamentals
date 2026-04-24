@@ -6,7 +6,7 @@
   <title>Android Fundamentals | Under the Hood</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Fira+Code&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
   <link rel="stylesheet" href="index.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
@@ -17,16 +17,13 @@
 </head>
 <body>
   <div id="loading-bar"></div>
-  <div id="loading-overlay">
-    <div class="spinner"></div>
-  </div>
-
-  <button id="sidebar-toggle" title="Toggle Sidebar">☰</button>
+  
+  <button id="sidebar-toggle" title="Table of Contents">☰</button>
 
   <div id="app">
     <aside id="sidebar">
       <div class="sidebar-header">
-        <h1>Android Fundamentals</h1>
+        <h1>Table of Contents</h1>
       </div>
       <nav id="nav-container">
         <!-- Navigation sections will be injected here -->
@@ -38,6 +35,11 @@
         <article id="content" class="markdown-body">
           <!-- Markdown content will be rendered here -->
         </article>
+        
+        <div class="page-nav">
+          <button id="prev-page" class="page-btn">← Previous Chapter</button>
+          <button id="next-page" class="page-btn">Next Chapter →</button>
+        </div>
       </div>
     </main>
   </div>
@@ -47,37 +49,29 @@
     const contentEl = document.getElementById('content');
     const navContainer = document.getElementById('nav-container');
     const loadingBar = document.getElementById('loading-bar');
-    const loadingOverlay = document.getElementById('loading-overlay');
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
 
-    // Utility: Show error on screen if everything fails
+    let flatFileList = [];
+
+    // Utility: Show error
     function showFatalError(msg, err) {
       console.error(msg, err);
       contentEl.innerHTML = `
-        <div style="padding: 2rem; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 1rem;">
-          <h2 style="color: #ef4444; margin-bottom: 1rem;">🚀 Startup Error</h2>
-          <p style="color: #f8fafc; margin-bottom: 1rem;">${msg}</p>
-          <pre style="background: #000; padding: 1rem; border-radius: 0.5rem; color: #ef4444; font-size: 0.8rem;">${err ? err.stack || err : 'Unknown error'}</pre>
-          <button onclick="window.location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">Retry</button>
+        <div style="padding: 2rem; border: 2px solid var(--accent-color); border-radius: 8px; background: #fff;">
+          <h2 style="color: var(--accent-color);">📖 Bookmark Lost</h2>
+          <p>${msg}</p>
+          <pre style="background: #eee; padding: 1rem; margin-top: 1rem; font-size: 0.8rem;">${err ? err.stack || err : 'Unknown error'}</pre>
         </div>
       `;
-      showLoading(false);
     }
 
-    // Configure marked (with safety check)
     function configureMarked() {
-      if (typeof marked === 'undefined') {
-        throw new Error('Marked.js library failed to load. Check your internet connection or CDN availability.');
-      }
-      
+      if (typeof marked === 'undefined') throw new Error('Marked.js failed to load');
       const renderer = new marked.Renderer();
       marked.setOptions({
         renderer: renderer,
-        highlight: function(code, lang) {
-          if (typeof Prism !== 'undefined' && Prism.languages[lang]) {
-            return Prism.highlight(code, Prism.languages[lang], lang);
-          }
-          return code;
-        },
+        highlight: (code, lang) => (typeof Prism !== 'undefined' && Prism.languages[lang]) ? Prism.highlight(code, Prism.languages[lang], lang) : code,
         headerIds: true,
         gfm: true,
         breaks: true
@@ -86,95 +80,81 @@
 
     async function fetchMarkdown(path) {
       showLoading(true);
-      const fetchPath = path.startsWith('/') ? path : './' + path;
-      
       try {
-        const response = await fetch(fetchPath);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+        const response = await fetch(path.startsWith('/') ? path : './' + path);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return await response.text();
       } catch (err) {
-        console.error('Fetch error:', err);
-        return `# ⚠️ Content Load Error\n\n**Path:** \`${path}\`\n\n**Reason:** ${err.message}\n\n---\n*Please ensure you are running a local web server and that the file exists.*`;
+        return `# ⚠️ Chapter Missing\n\n**Path:** \`${path}\`\n\n*This page seems to have been torn out.*`;
       } finally {
         showLoading(false);
       }
     }
 
     function showLoading(show) {
-      if (!loadingBar || !loadingOverlay) return;
-      if (show) {
-        loadingBar.style.width = '30%';
-        loadingOverlay.style.visibility = 'visible';
-        loadingOverlay.style.opacity = '1';
-      } else {
-        loadingBar.style.width = '100%';
-        setTimeout(() => {
-          loadingBar.style.width = '0';
-          loadingOverlay.style.opacity = '0';
-          setTimeout(() => {
-            loadingOverlay.style.visibility = 'hidden';
-          }, 300);
-        }, 300);
-      }
+      if (!loadingBar) return;
+      loadingBar.style.width = show ? '30%' : '100%';
+      if (!show) setTimeout(() => loadingBar.style.width = '0', 300);
     }
 
     async function renderPage(path) {
       const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-      let markdown = await fetchMarkdown(cleanPath);
+      const markdown = await fetchMarkdown(cleanPath);
+      contentEl.innerHTML = marked.parse(markdown);
       
-      // Clear content first
-      contentEl.innerHTML = '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (typeof Prism !== 'undefined') Prism.highlightAllUnder(contentEl);
 
-      try {
-        const renderedMarkdown = document.createElement('div');
-        renderedMarkdown.innerHTML = marked.parse(markdown);
-        contentEl.appendChild(renderedMarkdown);
-        
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        
-        if (typeof Prism !== 'undefined') {
-          Prism.highlightAllUnder(contentEl);
+      // Handle internal links
+      contentEl.querySelectorAll('a').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && href.endsWith('.md')) {
+          link.addEventListener('click', (e) => {
+            e.preventDefault();
+            navigateTo(resolvePath(cleanPath, href));
+          });
         }
+      });
 
-        // Intercept links
-        contentEl.querySelectorAll('a').forEach(link => {
-          const href = link.getAttribute('href');
-          if (href && href.endsWith('.md')) {
-            link.addEventListener('click', (e) => {
-              e.preventDefault();
-              navigateTo(resolvePath(cleanPath, href));
-            });
-          }
-        });
+      updateActiveNav(cleanPath);
+      updateNavButtons(cleanPath);
+    }
 
-        // Update active sidebar link and scroll to it
-        document.querySelectorAll('.nav-link').forEach(link => {
-          const linkPath = link.getAttribute('data-path');
-          if (linkPath === cleanPath || (cleanPath === 'README.md' && linkPath === 'README.md')) {
-            link.classList.add('active');
-            // Auto-scroll sidebar to the active link
-            link.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          } else {
-            link.classList.remove('active');
-          }
-        });
-      } catch (err) {
-        showFatalError('Failed to render markdown content.', err);
+    function updateActiveNav(path) {
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.toggle('active', link.getAttribute('data-path') === path);
+        if (link.classList.contains('active')) link.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
+
+    function updateNavButtons(currentPath) {
+      const idx = flatFileList.findIndex(f => f.path === currentPath);
+      
+      if (idx > 0) {
+        prevBtn.style.visibility = 'visible';
+        prevBtn.onclick = () => navigateTo(flatFileList[idx-1].path);
+        prevBtn.innerText = `← ${flatFileList[idx-1].name.replace('.md', '').replace(/-/g, ' ')}`;
+      } else {
+        prevBtn.style.visibility = 'hidden';
+      }
+
+      if (idx < flatFileList.length - 1) {
+        nextBtn.style.visibility = 'visible';
+        nextBtn.onclick = () => navigateTo(flatFileList[idx+1].path);
+        nextBtn.innerText = `${flatFileList[idx+1].name.replace('.md', '').replace(/-/g, ' ')} →`;
+      } else {
+        nextBtn.style.visibility = 'hidden';
       }
     }
 
     function resolvePath(currentPath, relativePath) {
-      if (relativePath.startsWith('/')) return relativePath.substring(1);
       const currentDir = currentPath.includes('/') ? currentPath.substring(0, currentPath.lastIndexOf('/') + 1) : '';
       let resolved = currentDir + relativePath;
-      resolved = resolved.replace(/\.\//g, '');
       const parts = resolved.split('/');
       const stack = [];
       for (const part of parts) {
         if (part === '..') stack.pop();
-        else if (part !== '.') stack.push(part);
+        else if (part !== '.' && part !== '') stack.push(part);
       }
       return stack.join('/');
     }
@@ -184,83 +164,60 @@
     }
 
     function buildSidebar(structure) {
-      try {
-        window.projectStructure = structure;
-        navContainer.innerHTML = '';
+      navContainer.innerHTML = '';
+      flatFileList = [];
 
-        structure.sort((a, b) => {
-          if (a.is_root) return -1;
-          if (b.is_root) return 1;
-          return a.path.localeCompare(b.path);
+      structure.sort((a, b) => a.is_root ? -1 : b.is_root ? 1 : a.path.localeCompare(b.path));
+
+      structure.forEach(folder => {
+        if (folder.files.length === 0) return;
+        
+        const section = document.createElement('div');
+        section.className = 'nav-section';
+        const title = folder.is_root ? 'Introduction' : folder.path.replace(/\//g, ' › ');
+        section.innerHTML = `<h2>${title}</h2><ul class="nav-links"></ul>`;
+        const list = section.querySelector('ul');
+
+        folder.files.forEach(file => {
+          flatFileList.push(file);
+          const li = document.createElement('li');
+          const name = file.name.replace('.md', '').replace(/-/g, ' ');
+          li.innerHTML = `<a class="nav-link" data-path="${file.path}">${name}</a>`;
+          li.querySelector('a').addEventListener('click', () => navigateTo(file.path));
+          list.appendChild(li);
         });
-
-        navContainer.innerHTML = structure.map(folder => {
-          if (folder.files.length === 0) return '';
-          const folderName = folder.is_root ? '🏠 HOME' : folder.path.replace(/\//g, ' › ');
-          return `
-            <div class="nav-section">
-              <h2>${folderName}</h2>
-              <ul class="nav-links">
-                ${folder.files.map(file => {
-                  const displayName = file.name.replace('.md', '').replace(/-/g, ' ');
-                  return `
-                    <li>
-                      <a class="nav-link" data-path="${file.path}" onclick="navigateTo('${file.path}')">
-                        <span class="file-icon">📄</span> ${displayName}
-                      </a>
-                    </li>
-                  `;
-                }).join('')}
-              </ul>
-            </div>
-          `;
-        }).join('');
-      } catch (err) {
-        console.error('Sidebar build error:', err);
-      }
+        navContainer.appendChild(section);
+      });
     }
 
     async function init() {
       try {
         configureMarked();
-        
-        const structureResponse = await fetch('structure.json');
-        if (!structureResponse.ok) throw new Error('Structure file not found');
-        const structure = await structureResponse.json();
-        
+        const response = await fetch('structure.json');
+        const structure = await response.json();
         buildSidebar(structure);
 
-        let initialPath = window.location.hash.slice(1);
-        if (!initialPath || initialPath === '/' || initialPath === '') initialPath = 'README.md';
-        
+        let initialPath = window.location.hash.slice(1) || 'README.md';
         await renderPage(initialPath);
 
-        // Sidebar Toggle Logic
         const sidebarToggle = document.getElementById('sidebar-toggle');
         const app = document.getElementById('app');
         sidebarToggle.addEventListener('click', () => {
           app.classList.toggle('sidebar-collapsed');
-          sidebarToggle.innerText = app.classList.contains('sidebar-collapsed') ? '📁' : '☰';
-        });
-
-        // Section Collapsing
-        navContainer.addEventListener('click', (e) => {
-          if (e.target.tagName === 'H2') {
-            const list = e.target.nextElementSibling;
-            if (list) {
-              list.style.display = list.style.display === 'none' ? 'block' : 'none';
-              e.target.style.opacity = list.style.display === 'none' ? '0.4' : '1';
-            }
-          }
         });
 
         window.addEventListener('hashchange', () => {
-          let path = window.location.hash.slice(1);
-          if (!path || path === '/' || path === '') path = 'README.md';
-          renderPage(path);
+          renderPage(window.location.hash.slice(1) || 'README.md');
         });
+
+        // Keyboard Navigation
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowLeft' && prevBtn.style.visibility !== 'hidden') prevBtn.click();
+          if (e.key === 'ArrowRight' && nextBtn.style.visibility !== 'hidden') nextBtn.click();
+        });
+
       } catch (err) {
-        showFatalError('Failed to initialize the application.', err);
+        showFatalError('Failed to initialize book.', err);
       }
     }
 
