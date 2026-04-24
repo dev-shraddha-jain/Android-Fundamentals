@@ -127,6 +127,28 @@ graph TD
     L --> M[onUnbind]
     M --> N[onDestroy]
 ```
+.....explaination ??
+
+---
+### 🚀 Interview-Level Summary
+
+`onCreate()` → called once
+
+`onStartCommand()` → can be called multiple times
+
+`onBind()` → establishes IPC channel
+
+`onDestroy()` → final cleanup
+
+Service runs on main thread unless you offload work
+
+Lifecycle depends on:
+
+    Start mode
+
+    Binding state
+    
+    System constraints
 
 ---
 
