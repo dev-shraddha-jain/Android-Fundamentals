@@ -31,18 +31,60 @@ body {
   min-height: 100vh;
 }
 
+#app.sidebar-collapsed aside {
+  transform: translateX(-100%);
+}
+
+#app.sidebar-collapsed main {
+  margin-left: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Sidebar Toggle Button */
+#sidebar-toggle {
+  position: fixed;
+  top: 1.5rem;
+  left: 1.5rem;
+  width: 3rem;
+  height: 3rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  color: var(--accent-color);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 200;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 1.25rem;
+}
+
+#sidebar-toggle:hover {
+  background: var(--accent-color);
+  color: #000;
+  transform: translateY(-2px);
+}
+
 /* Sidebar */
 aside {
   width: var(--sidebar-width);
   height: 100vh;
   position: fixed;
-  background: rgba(30, 41, 59, 0.8);
+  background: rgba(15, 23, 42, 0.9);
   backdrop-filter: blur(20px);
   border-right: 1px solid var(--glass-border);
-  padding: 2rem 1.5rem;
+  padding: 6rem 1.5rem 2rem 1.5rem; /* Space for top-left button */
   overflow-y: auto;
   z-index: 100;
-  transition: transform var(--transition-speed);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
 }
 
 .sidebar-header {
@@ -300,6 +342,71 @@ main {
 .markdown-body strong {
   color: #fff;
   font-weight: 600;
+}
+
+/* Visual Index (Home Page) */
+.visual-index {
+  margin-bottom: 4rem;
+}
+
+.visual-index h2 {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: var(--accent-color);
+  border: none;
+}
+
+.index-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.index-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.index-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent-color);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.index-card h3 {
+  font-size: 1.1rem;
+  color: #fff;
+  margin-bottom: 1rem;
+  text-transform: capitalize;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 0.5rem;
+}
+
+.index-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.index-card li {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.index-card a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+  display: block;
+}
+
+.index-card a:hover {
+  color: var(--accent-color);
+  padding-left: 4px;
 }
 
 /* Animations */
