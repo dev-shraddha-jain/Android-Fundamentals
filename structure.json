@@ -8,16 +8,16 @@
         "path": "README.md"
       },
       {
-        "name": "Storage.md",
-        "path": "Storage.md"
+        "name": "answer.md",
+        "path": "answer.md"
       },
       {
         "name": "WebView.md",
         "path": "WebView.md"
       },
       {
-        "name": "answer.md",
-        "path": "answer.md"
+        "name": "Storage.md",
+        "path": "Storage.md"
       },
       {
         "name": "JNI.md",
@@ -81,6 +81,10 @@
       {
         "name": "service-workmanager-jobscheduler.md",
         "path": "android-components/service/service-workmanager-jobscheduler.md"
+      },
+      {
+        "name": "serviceApp.md",
+        "path": "android-components/service/serviceApp.md"
       }
     ],
     "is_root": false
@@ -90,16 +94,16 @@
     "path": "android-components/service/a-service",
     "files": [
       {
+        "name": "security-risks.md",
+        "path": "android-components/service/a-service/security-risks.md"
+      },
+      {
         "name": "interview.md",
         "path": "android-components/service/a-service/interview.md"
       },
       {
         "name": "Service.md",
         "path": "android-components/service/a-service/Service.md"
-      },
-      {
-        "name": "security-risks.md",
-        "path": "android-components/service/a-service/security-risks.md"
       }
     ],
     "is_root": false
