@@ -126,3 +126,22 @@ If you need to sync data every 15 minutes, should you use a Service?
 **Answer:**
 **NO.** 
 A Service is for tasks that need to run *now*. For periodic or deferred tasks, use **WorkManager**. It is more battery-efficient, survives device reboots, and handles the "background execution limits" automatically.
+
+
+### Q11: Difference between started and bound service?
+**Started** → runs independently
+**Bound** → tied to client lifecycle
+
+### Q12: When is onCreate() called?
+Only once per service lifetime
+
+### Q13: Can onStartCommand() be called multiple times?
+Yes
+
+### Q14: When is service destroyed?
+After:
+stopSelf() / stopService()
+AND no active bindings
+
+### Q15: Why use START_STICKY?
+For long-running services (e.g., music player)

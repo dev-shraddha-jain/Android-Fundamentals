@@ -59,6 +59,44 @@ The system manages the service through specific callback methods:
 *   `onBind()`: Called when a component wants to bind to the service. Returns an `IBinder` object.
 *   `onDestroy()`: Called when the service is no longer used and is being destroyed.
 
+
+
+▶ Started Service Flow
+
+```text
+onCreate()
+   ↓
+onStartCommand()  (can be called multiple times)
+   ↓
+onDestroy()
+```
+
+▶ Bound Service Flow
+
+```text
+onCreate()
+   ↓
+onBind()
+   ↓
+onUnbind()
+   ↓
+onDestroy()
+```
+
+▶ Mixed (Started + Bound)
+
+```text
+onCreate()
+   ↓
+onStartCommand()
+   ↓
+onBind()
+   ↓
+onUnbind()
+   ↓
+(onDestroy only when both stop + unbind happen)
+```
+
 ### 3. Service "Sticky" Modes
 The integer returned by `onStartCommand()` tells the system how to handle the service if the OS kills it to reclaim memory:
 

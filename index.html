@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Android Fundamentals | Under the Hood</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <link rel="stylesheet" href="index.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-kotlin.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+</head>
+<body>
+  <div id="loading-bar"></div>
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <div id="app">
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <h1>Android Fundamentals</h1>
+      </div>
+      <nav id="nav-container">
+        <!-- Navigation sections will be injected here -->
+      </nav>
+    </aside>
+
+    <main>
+      <div class="content-wrapper">
+        <article id="content" class="markdown-body">
+          <!-- Markdown content will be rendered here -->
+        </article>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Constants
+    const contentEl = document.getElementById('content');
+    const navContainer = document.getElementById('nav-container');
+    const loadingBar = document.getElementById('loading-bar');
+    const loadingOverlay = document.getElementById('loading-overlay');
+
+    // Utility: Show error on screen if everything fails
+    function showFatalError(msg, err) {
+      console.error(msg, err);
+      contentEl.innerHTML = `
+        <div style="padding: 2rem; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 1rem;">
+          <h2 style="color: #ef4444; margin-bottom: 1rem;">🚀 Startup Error</h2>
+          <p style="color: #f8fafc; margin-bottom: 1rem;">${msg}</p>
+          <pre style="background: #000; padding: 1rem; border-radius: 0.5rem; color: #ef4444; font-size: 0.8rem;">${err ? err.stack || err : 'Unknown error'}</pre>
+          <button onclick="window.location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">Retry</button>
+        </div>
+      `;
+      showLoading(false);
+    }
+
+    // Configure marked (with safety check)
+    function configureMarked() {
+      if (typeof marked === 'undefined') {
+        throw new Error('Marked.js library failed to load. Check your internet connection or CDN availability.');
+      }
+      
+      const renderer = new marked.Renderer();
+      marked.setOptions({
+        renderer: renderer,
+        highlight: function(code, lang) {
+          if (typeof Prism !== 'undefined' && Prism.languages[lang]) {
+            return Prism.highlight(code, Prism.languages[lang], lang);
+          }
+          return code;
+        },
+        headerIds: true,
+        gfm: true,
+        breaks: true
+      });
+    }
+
+    async function fetchMarkdown(path) {
+      showLoading(true);
+      const fetchPath = path.startsWith('/') ? path : './' + path;
+      
+      try {
+        const response = await fetch(fetchPath);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return await response.text();
+      } catch (err) {
+        console.error('Fetch error:', err);
+        return `# ⚠️ Content Load Error\n\n**Path:** \`${path}\`\n\n**Reason:** ${err.message}\n\n---\n*Please ensure you are running a local web server and that the file exists.*`;
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function showLoading(show) {
+      if (!loadingBar || !loadingOverlay) return;
+      if (show) {
+        loadingBar.style.width = '30%';
+        loadingOverlay.style.visibility = 'visible';
+        loadingOverlay.style.opacity = '1';
+      } else {
+        loadingBar.style.width = '100%';
+        setTimeout(() => {
+          loadingBar.style.width = '0';
+          loadingOverlay.style.opacity = '0';
+          setTimeout(() => {
+            loadingOverlay.style.visibility = 'hidden';
+          }, 300);
+        }, 300);
+      }
+    }
+
+    async function renderPage(path) {
+      const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+      const markdown = await fetchMarkdown(cleanPath);
+      
+      try {
+        contentEl.innerHTML = marked.parse(markdown);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        if (typeof Prism !== 'undefined') {
+          Prism.highlightAllUnder(contentEl);
+        }
+
+        // Intercept links
+        contentEl.querySelectorAll('a').forEach(link => {
+          const href = link.getAttribute('href');
+          if (href && href.endsWith('.md')) {
+            link.addEventListener('click', (e) => {
+              e.preventDefault();
+              navigateTo(resolvePath(cleanPath, href));
+            });
+          }
+        });
+
+        // Update active sidebar link
+        document.querySelectorAll('.nav-link').forEach(link => {
+          const linkPath = link.getAttribute('data-path');
+          if (linkPath === cleanPath || (cleanPath === 'README.md' && linkPath === 'README.md')) {
+            link.classList.add('active');
+          } else {
+            link.classList.remove('active');
+          }
+        });
+      } catch (err) {
+        showFatalError('Failed to render markdown content.', err);
+      }
+    }
+
+    function resolvePath(currentPath, relativePath) {
+      if (relativePath.startsWith('/')) return relativePath.substring(1);
+      const currentDir = currentPath.includes('/') ? currentPath.substring(0, currentPath.lastIndexOf('/') + 1) : '';
+      let resolved = currentDir + relativePath;
+      resolved = resolved.replace(/\.\//g, '');
+      const parts = resolved.split('/');
+      const stack = [];
+      for (const part of parts) {
+        if (part === '..') stack.pop();
+        else if (part !== '.') stack.push(part);
+      }
+      return stack.join('/');
+    }
+
+    function navigateTo(path) {
+      window.location.hash = path;
+    }
+
+    function buildSidebar(readme) {
+      try {
+        const sections = [];
+        const lines = readme.split('\n');
+        let currentSection = { title: 'General', links: [{ title: '🏠 Welcome', path: 'README.md' }] };
+
+        lines.forEach(line => {
+          const headerMatch = line.match(/^## (.*)/);
+          if (headerMatch) {
+            if (currentSection.links.length > 0) sections.push(currentSection);
+            currentSection = { title: headerMatch[1].trim(), links: [] };
+          }
+          
+          const linkMatch = line.match(/\[\*\*(.*?)\*\*\]\((.*?\.md)\)/);
+          if (linkMatch) {
+            currentSection.links.push({ title: linkMatch[1], path: linkMatch[2] });
+          }
+        });
+        sections.push(currentSection);
+
+        navContainer.innerHTML = sections.map(section => `
+          <div class="nav-section">
+            <h2>${section.title}</h2>
+            <ul class="nav-links">
+              ${section.links.map(link => `
+                <li>
+                  <a class="nav-link" data-path="${link.path}" onclick="navigateTo('${link.path}')">${link.title}</a>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Sidebar build error:', err);
+      }
+    }
+
+    async function init() {
+      try {
+        configureMarked();
+        
+        const readme = await fetchMarkdown('README.md');
+        buildSidebar(readme);
+
+        let initialPath = window.location.hash.slice(1);
+        if (!initialPath || initialPath === '/') initialPath = 'README.md';
+        
+        await renderPage(initialPath);
+
+        window.addEventListener('hashchange', () => {
+          let path = window.location.hash.slice(1);
+          if (!path || path === '/') path = 'README.md';
+          renderPage(path);
+        });
+      } catch (err) {
+        showFatalError('Failed to initialize the application.', err);
+      }
+    }
+
+    // Run on load
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
