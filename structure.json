@@ -81,6 +81,10 @@
       {
         "name": "service-workmanager-jobscheduler.md",
         "path": "android-components/service/service-workmanager-jobscheduler.md"
+      },
+      {
+        "name": "serviceApp.md",
+        "path": "android-components/service/serviceApp.md"
       }
     ],
     "is_root": false
@@ -116,6 +120,17 @@
     "is_root": false
   },
   {
+    "name": "android-jetpack",
+    "path": "android-jetpack",
+    "files": [
+      {
+        "name": "DependencyInjection.md",
+        "path": "android-jetpack/DependencyInjection.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
     "name": "android-manifest",
     "path": "android-manifest",
     "files": [
@@ -133,6 +148,21 @@
       {
         "name": "Permissions.md",
         "path": "android-manifest/permissions/Permissions.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "android-performance",
+    "path": "android-performance",
+    "files": [
+      {
+        "name": "MemoryManagement.md",
+        "path": "android-performance/MemoryManagement.md"
+      },
+      {
+        "name": "UIRendering.md",
+        "path": "android-performance/UIRendering.md"
       }
     ],
     "is_root": false

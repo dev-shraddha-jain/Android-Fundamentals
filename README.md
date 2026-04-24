@@ -22,8 +22,14 @@ How Android handles persistence and security.
 *   [**Storage Options**](Storage.md) - SharedPrefs, Room, and Scoped Storage.
 *   [**Permissions**](android-manifest/permissions/Permissions.md) - Protecting user privacy.
 
+## 🧩 Modern Jetpack & DI
+Advanced architectural patterns.
+*   [**Dependency Injection**](android-jetpack/DependencyInjection.md) - Hilt & Dagger internals.
+
 ## 🛠️ Performance & Security
 Advanced concepts for senior developers.
+*   [**Memory Management**](android-performance/MemoryManagement.md) - ART GC and Low Memory Killer.
+*   [**UI Rendering**](android-performance/UIRendering.md) - VSync, Choreographer, and Overdraw.
 *   [**JNI (Java Native Interface)**](JNI.md) - Bridging Java and C++.
 *   [**Proguard & R8**](obfuscate/ProguardR8.md) - Obfuscation and optimization.
 *   [**WebView JS Injection**](WebView.md) - Native-Web communication.
