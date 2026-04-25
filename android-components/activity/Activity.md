@@ -146,7 +146,6 @@ onCreate → onStart → onResume
 
 
 
-
 ## 2. Ways an Activity Can Be Launched
 
 ### ✅ A. From Launcher (App icon tap)

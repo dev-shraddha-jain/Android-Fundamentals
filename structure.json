@@ -4,24 +4,8 @@
     "path": "",
     "files": [
       {
-        "name": "README.md",
+        "name": "What's in the Book",
         "path": "README.md"
-      },
-      {
-        "name": "answer.md",
-        "path": "answer.md"
-      },
-      {
-        "name": "WebView.md",
-        "path": "WebView.md"
-      },
-      {
-        "name": "Storage.md",
-        "path": "Storage.md"
-      },
-      {
-        "name": "JNI.md",
-        "path": "JNI.md"
       }
     ],
     "is_root": true
@@ -38,35 +22,25 @@
     "is_root": false
   },
   {
-    "name": "activity",
+    "name": "App Components",
     "path": "android-components/activity",
     "files": [
       {
-        "name": "interview.md",
+        "name": "Activity.md",
+        "path": "android-components/activity/Activity.md"
+      },
+      {
+        "name": "Interview QnA",
         "path": "android-components/activity/interview.md"
       },
       {
-        "name": "Activity.md",
-        "path": "android-components/activity/Activity.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "content-provider",
-    "path": "android-components/content-provider",
-    "files": [
+        "name": "Manifest.md",
+        "path": "android-manifest/Manifest.md"
+      },
       {
         "name": "ContentProvider.md",
         "path": "android-components/content-provider/ContentProvider.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "receiver",
-    "path": "android-components/receiver",
-    "files": [
+      },
       {
         "name": "BroadcastReceiver.md",
         "path": "android-components/receiver/BroadcastReceiver.md"
@@ -75,46 +49,32 @@
     "is_root": false
   },
   {
-    "name": "service",
+    "name": "Service/WorkManager",
     "path": "android-components/service",
     "files": [
       {
-        "name": "service-workmanager-jobscheduler.md",
-        "path": "android-components/service/service-workmanager-jobscheduler.md"
+        "name": "Service.md",
+        "path": "android-components/service/a-service/Service.md"
       },
-      {
-        "name": "serviceApp.md",
-        "path": "android-components/service/serviceApp.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "a-service",
-    "path": "android-components/service/a-service",
-    "files": [
       {
         "name": "security-risks.md",
         "path": "android-components/service/a-service/security-risks.md"
       },
       {
-        "name": "interview.md",
+        "name": "Interview QnA",
         "path": "android-components/service/a-service/interview.md"
       },
       {
-        "name": "Service.md",
-        "path": "android-components/service/a-service/Service.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "workmanger",
-    "path": "android-components/service/workmanger",
-    "files": [
+        "name": "App Witout An Activity ?",
+        "path": "android-components/service/serviceApp.md"
+      },
       {
         "name": "workmanager.md",
         "path": "android-components/service/workmanger/workmanager.md"
+      },
+      {
+        "name": "service-workmanager-jobscheduler.md",
+        "path": "android-components/service/service-workmanager-jobscheduler.md"
       }
     ],
     "is_root": false
@@ -131,20 +91,13 @@
     "is_root": false
   },
   {
-    "name": "android-manifest",
+    "name": "Android Manifest & Permissions",
     "path": "android-manifest",
     "files": [
       {
         "name": "Manifest.md",
         "path": "android-manifest/Manifest.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "permissions",
-    "path": "android-manifest/permissions",
-    "files": [
+      },
       {
         "name": "Permissions.md",
         "path": "android-manifest/permissions/Permissions.md"
@@ -153,7 +106,7 @@
     "is_root": false
   },
   {
-    "name": "android-performance",
+    "name": "Android App Performance",
     "path": "android-performance",
     "files": [
       {
@@ -168,7 +121,7 @@
     "is_root": false
   },
   {
-    "name": "intents",
+    "name": "Android Intents",
     "path": "intents",
     "files": [
       {
@@ -179,12 +132,45 @@
     "is_root": false
   },
   {
-    "name": "obfuscate",
+    "name": "ProGuard/R8",
     "path": "obfuscate",
     "files": [
       {
         "name": "ProguardR8.md",
         "path": "obfuscate/ProguardR8.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "WebView",
+    "path": "",
+    "files": [
+      {
+        "name": "Injecting js in Android Webview",
+        "path": "WebView.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "Android Storage Methods",
+    "path": "",
+    "files": [
+      {
+        "name": "Storage",
+        "path": "Storage.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "C, C++ & JNI",
+    "path": "",
+    "files": [
+      {
+        "name": "JNI",
+        "path": "JNI.md"
       }
     ],
     "is_root": false

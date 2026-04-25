@@ -68,13 +68,20 @@
 
     function configureMarked() {
       if (typeof marked === 'undefined') throw new Error('Marked.js failed to load');
-      const renderer = new marked.Renderer();
+      
+      // Configure marked with standard GFM options
       marked.setOptions({
-        renderer: renderer,
-        highlight: (code, lang) => (typeof Prism !== 'undefined' && Prism.languages[lang]) ? Prism.highlight(code, Prism.languages[lang], lang) : code,
-        headerIds: true,
         gfm: true,
-        breaks: true
+        breaks: false, // Changed from true to false to prevent unwanted <br> tags
+        headerIds: true,
+        mangle: false,
+        smartLists: true,
+        highlight: (code, lang) => {
+          if (typeof Prism !== 'undefined' && Prism.languages[lang]) {
+            return Prism.highlight(code, Prism.languages[lang], lang);
+          }
+          return code;
+        }
       });
     }
 
@@ -100,8 +107,20 @@
     async function renderPage(path) {
       const cleanPath = path.startsWith('/') ? path.substring(1) : path;
       const markdown = await fetchMarkdown(cleanPath);
-      contentEl.innerHTML = marked.parse(markdown);
       
+      const html = marked.parse(markdown);
+      contentEl.innerHTML = html;
+      
+      // Fix relative image, iframe and link paths
+      const currentDir = cleanPath.includes('/') ? cleanPath.substring(0, cleanPath.lastIndexOf('/') + 1) : '';
+      
+      contentEl.querySelectorAll('img, iframe').forEach(el => {
+        const src = el.getAttribute('src');
+        if (src && !src.startsWith('http') && !src.startsWith('/') && !src.startsWith('data:')) {
+          el.src = currentDir + src;
+        }
+      });
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
       if (typeof Prism !== 'undefined') Prism.highlightAllUnder(contentEl);
 
