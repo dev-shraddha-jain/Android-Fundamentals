@@ -43,6 +43,10 @@ val intent = Intent(this, LocalService::class.java)
 bindService(intent, connection, Context.BIND_AUTO_CREATE)
 ```
 
+### 🎬 Interactive Mechanism Walkthrough
+
+<iframe src="service_mechanism.html" width="100%" height="450px" style="border:none; border-radius: 8px; margin: 1.5rem 0;"></iframe>
+
 ---
 
 # ⚙️ How Services Work Internally

@@ -34,10 +34,6 @@
         "path": "android-components/activity/interview.md"
       },
       {
-        "name": "Manifest.md",
-        "path": "android-manifest/Manifest.md"
-      },
-      {
         "name": "ContentProvider.md",
         "path": "android-components/content-provider/ContentProvider.md"
       },

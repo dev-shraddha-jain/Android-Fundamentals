@@ -2,37 +2,34 @@
 
 This is where most candidates slip. Answer these **without guessing**; each targets a real-world edge case.
 
-
 ### Q1. Rotation Trap
 
-You rotate the device while an Activity is visible.
-
 **Question:**
+You rotate the device while an Activity is visible.
 What exact lifecycle sequence is called?
 
 Also:
 
-* Is the same Activity instance reused?
-* How do you persist UI state correctly?
+- Is the same Activity instance reused?
+- How do you persist UI state correctly?
 
+**Answer:**
 
 ```text
 onPause → onStop → onDestroy → onCreate → onStart → onResume
 ```
 
-**Answer:**
-
 **Instance reused?:** **No** → New Activity instance is created
 
-**State handling:** Used viewmodel, savedstatehandle, onSaveInstanceState also expected
+**State handling:** Use ViewModel, SavedStateHandle, onSaveInstanceState to persist the UI state
 
 ---
 
 ### Q2. onPause vs onStop (Execution Risk)
 
+**Question:**
 You are saving critical user data.
 
-**Question:**
 Where should you save it: `onPause()` or `onStop()`?
 What happens if the process is killed right after `onPause()`?
 
@@ -46,6 +43,7 @@ What happens if the process is killed right after `onPause()`?
 ```text
 onPause → (process killed)
 ```
+
 ---
 
 ### Q3. onDestroy Myth
@@ -57,7 +55,7 @@ onPause → (process killed)
 **Question:**
 Is this true or false? Justify with a real scenario.
 
-**Answer:** 
+**Answer:**
 
 False
 
@@ -69,13 +67,14 @@ Process death skips onDestroy
 
 ### Q4. Home vs Back Button
 
+**Question:**
+
 User presses:
 
 ### Case A: Home
 
 ### Case B: Back
 
-**Question:**
 What lifecycle methods are called in each case?
 What is the key difference in system behavior?
 
@@ -86,6 +85,7 @@ Case A: Home
 ```text
 onPause → onStop
 ```
+
 Case B: Back
 
 ```text
@@ -98,6 +98,8 @@ onPause → onStop → onDestroy
 
 ### Q5. App in Background → Killed → Reopened
 
+**Question:**
+
 Flow:
 
 1. User opens app
@@ -105,7 +107,6 @@ Flow:
 3. System kills process (low memory)
 4. User opens app again
 
-**Question:**
 Which lifecycle methods are called when reopening?
 Will `onRestart()` be called?
 
@@ -121,27 +122,29 @@ onCreate → onStart → onResume
 
 ### Q6. Multiple Activities Stack
 
+**Question:**
+
 You have:
 
-* `ActivityA → ActivityB`
+- `ActivityA → ActivityB`
 
 User presses Back from B.
 
-**Question:**
 What lifecycle methods are called on:
 
-* ActivityB
-* ActivityA
-
+- ActivityB
+- ActivityA
 
 **Answer:**
 
-
 ActivityB (finishing)
+
 ```text
 onPause → onStop → onDestroy
 ```
+
 ActivityA (coming back)
+
 ```text
 onRestart → onStart → onResume
 ```
@@ -152,16 +155,16 @@ onRestart → onStart → onResume
 
 ### Q7. Dialog / Transparent Activity
 
+**Question:**
+
 You open a **dialog-themed Activity** on top of another Activity.
 
-**Question:**
 Will underlying Activity get:
 
-* `onPause()`?
-* `onStop()`?
+- `onPause()`?
+- `onStop()`?
 
 Explain why.
-
 
 **Answer:**
 
@@ -175,12 +178,12 @@ Activity is partially visible but not interactive
 
 ### Q8. Long Operation Mistake
 
+**Question:**
+
 You run a **network call in onResume()**.
 
-**Question:**
 What lifecycle issue can this cause?
 What is the better architectural approach?
-
 
 **Answer:**
 
@@ -192,7 +195,7 @@ Better approach:
 Use `ViewModel + Repository`
 Trigger once using:
 
-`init {}`  in ViewModel
+`init {}` in ViewModel
 
 or lifecycle-aware observer
 
@@ -200,11 +203,12 @@ or lifecycle-aware observer
 
 ## Q9. Launch Mode Twist
 
+**Question:**
+
 Activity launchMode = `singleTop`
 
 You call `startActivity()` again for same Activity already on top.
 
-**Question:**
 Which method is called instead of creating a new instance?
 
 **Answer:**
@@ -217,12 +221,13 @@ Which method is called instead of creating a new instance?
 
 ### Q10. Process Death Recovery
 
+**Question:**
+
 App is killed in background.
 
-**Question:**
 Which method is used to restore UI state?
 
-* `onSaveInstanceState()` OR `onDestroy()`?
+- `onSaveInstanceState()` OR `onDestroy()`?
 
 Explain flow clearly.
 
@@ -244,21 +249,19 @@ onPause → onStop → process killed
 
 Define:
 
-* Cold start
-* Warm start
-* Hot start
+- Cold start
+- Warm start
+- Hot start
 
 And map lifecycle methods involved in each.
 
 **Answer:**
-
 
 | Type       | Meaning                | Lifecycle                      |
 | ---------- | ---------------------- | ------------------------------ |
 | Cold Start | App not in memory      | onCreate → onStart → onResume  |
 | Warm Start | In memory, not visible | onRestart → onStart → onResume |
 | Hot Start  | Already visible        | onResume                       |
-
 
 ---
 

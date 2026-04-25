@@ -11,6 +11,10 @@ WorkManager is not a background service itself. Instead, it is an **orchestrator
 > [!IMPORTANT]
 > The "magic" of WorkManager lies in its **internal SQLite database**. Every work request you enqueue is first saved to disk. This is why it can survive process death and reboots.
 
+### 🎬 Interactive Mechanism Walkthrough
+
+<iframe src="workmanager_mechanism.html" width="100%" height="450px" style="border:none; border-radius: 8px; margin: 1.5rem 0;"></iframe>
+
 ---
 
 # 🛠️ Work Types

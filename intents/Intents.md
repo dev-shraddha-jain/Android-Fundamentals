@@ -22,6 +22,9 @@ startActivity(intent)
 
 to request actions without specifying the handler; the system finds appropriate components based on intent filters.
 
+### 🎬 Interactive Mechanism Walkthrough
+
+<iframe src="intent_mechanism.html" width="100%" height="450px" style="border:none; border-radius: 8px; margin: 1.5rem 0;"></iframe>
 
 ## Example: How Android knows which app should open a PDF
 

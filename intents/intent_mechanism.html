@@ -1,0 +1,109 @@
+
+<h2 class="sr-only">Android Intent mechanism — how Intents are resolved and delivered across the system</h2>
+<style>
+:root{--cb:#e2e8f0;--ct:#cbd5e1;--ci:#94a3b8;--tp:#334155;--ts:#64748b;--tt:#94a3b8;--ti:#64748b;--tc:#10b981;--tw:#d97706;--td:#8b5cf6;--bp:#fff;--bs:#f8fafc;--bi:#f1f5f9;--bg:#ecfdf5;--bw:#fef3c7;--bd:#f5f3ff;--br:8px}
+body{font-family:'Inter',-apple-system,sans-serif;margin:0;color:var(--tp)}
+@media(prefers-reduced-motion:no-preference){.step-enter{animation:fadeSlide .35s ease forwards}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--cb);transition:background .2s,transform .2s;flex-shrink:0}.dot.active{background:var(--ti);transform:scale(1.3)}.dot.done{background:var(--tc)}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+.tag-explicit{background:var(--bg);color:var(--tc)}.tag-implicit{background:var(--bw);color:var(--tw)}.tag-system{background:var(--bi);color:var(--ti)}.tag-security{background:var(--bd);color:var(--td)}
+.flow-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.flow-box{font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid var(--cb);color:var(--ts);background:var(--bs)}.flow-box.hi{border-color:var(--ci);color:var(--ti);background:var(--bi);font-weight:500}
+.flow-arr{color:var(--tt);font-size:13px}
+.nav-btn{font-size:13px;padding:6px 18px;cursor:pointer;border-radius:6px;border:1px solid var(--cb);background:#fff;color:var(--ts);transition:all .2s}.nav-btn:hover:not(:disabled){background:var(--bi);border-color:var(--ci);color:var(--tp)}.nav-btn:disabled{opacity:.5;cursor:not-allowed}
+.tab{font-size:13px;padding:8px 20px;cursor:pointer;border-radius:6px 6px 0 0;border:1px solid var(--cb);border-bottom:none;background:var(--bs);color:var(--ts);transition:all .2s;font-weight:500}.tab.active{background:var(--bp);color:var(--tp);border-color:var(--ct)}.tab:hover:not(.active){background:var(--bi)}
+</style>
+
+<div style="padding:1rem 0">
+<div style="display:flex;gap:4px;margin-bottom:0;flex-wrap:wrap">
+<button class="tab active" id="tab-exp" onclick="switchTab('exp')">🎯 Explicit Intent Flow</button>
+<button class="tab" id="tab-imp" onclick="switchTab('imp')">🔍 Implicit Intent Resolution</button>
+</div>
+<div style="border:1px solid var(--ct);border-radius:0 var(--br) var(--br) var(--br);padding:1.25rem">
+
+<div id="sec-exp">
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap" id="e-dots"></div>
+<div id="e-card" style="border:.5px solid var(--ct);border-radius:var(--br);padding:1.25rem 1.5rem;background:var(--bp);min-height:210px"></div>
+<div style="display:flex;gap:10px;margin-top:1rem;align-items:center">
+<button class="nav-btn" id="e-prev" onclick="eMove(-1)">← Prev</button>
+<button class="nav-btn" id="e-next" onclick="eMove(1)">Next →</button>
+<button class="nav-btn" id="e-auto" onclick="eToggleAuto()" style="margin-left:auto">▶ Auto-play</button>
+</div>
+</div>
+
+<div id="sec-imp" style="display:none">
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap" id="i-dots"></div>
+<div id="i-card" style="border:.5px solid var(--ct);border-radius:var(--br);padding:1.25rem 1.5rem;background:var(--bp);min-height:210px"></div>
+<div style="display:flex;gap:10px;margin-top:1rem;align-items:center">
+<button class="nav-btn" id="i-prev" onclick="iMove(-1)">← Prev</button>
+<button class="nav-btn" id="i-next" onclick="iMove(1)">Next →</button>
+<button class="nav-btn" id="i-auto" onclick="iToggleAuto()" style="margin-left:auto">▶ Auto-play</button>
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+const tagCls={explicit:'tag-explicit',implicit:'tag-implicit',system:'tag-system',security:'tag-security'};
+const eSteps=[
+{tag:'explicit',tagLabel:'Create',title:'Build an explicit Intent with target class',
+desc:'You create an Intent specifying the exact component (Activity, Service, BroadcastReceiver) to start. The Intent contains the package name and class name of the target. This is the most direct way to start a component.',
+flow:['Intent(this, TargetActivity::class.java)','Package + class name specified','putExtra() for data'],highlight:0,
+detail:'Explicit intents always target a single component. No resolution is needed — the system knows exactly which class to instantiate. Use this for internal app navigation.'},
+{tag:'system',tagLabel:'System',title:'startActivity() sends Intent to AMS',
+desc:'When you call startActivity(intent), the Intent is sent to ActivityManagerService (AMS) via Binder IPC. AMS validates the Intent, checks the target component exists in the manifest, and verifies permissions.',
+flow:['startActivity(intent)','Binder IPC → AMS','Validate component & permissions'],highlight:1,
+detail:'AMS checks: does the target Activity exist? Is it exported (if cross-app)? Does the caller have required permissions? Are there any restrictions (e.g., background activity start limitations on Android 10+)?'},
+{tag:'system',tagLabel:'System',title:'AMS resolves and starts the target',
+desc:'AMS looks up the target Activity in its internal records. If the target app process isn\'t running, AMS asks Zygote to fork a new process. Then AMS tells the ActivityThread to create and launch the Activity instance.',
+flow:['Lookup target process','Fork if needed','ActivityThread.scheduleLaunchActivity()'],highlight:2,
+detail:'For explicit intents within the same app, the process is already running — no fork needed. AMS just tells the existing ActivityThread to create a new Activity instance.'},
+{tag:'explicit',tagLabel:'Deliver',title:'Intent extras delivered to target Activity',
+desc:'The target Activity receives the Intent in onCreate() via getIntent(). Extra data (putExtra key-value pairs) is accessible. For startActivityForResult(), the result is returned via onActivityResult() (or the modern ActivityResult API).',
+flow:['onCreate() → getIntent()','intent.getStringExtra("key")','Result returned via setResult()'],highlight:1,
+detail:'Modern approach: use Activity Result API (registerForActivityResult) instead of deprecated startActivityForResult/onActivityResult. It\'s lifecycle-aware and type-safe.'}
+];
+const iSteps=[
+{tag:'implicit',tagLabel:'Create',title:'Build an implicit Intent with action + data',
+desc:'You create an Intent with an ACTION (what to do) and optionally DATA (URI/MIME type) — but NO target component. You\'re saying "I want someone to handle viewing this URL" without caring which app does it.',
+flow:['Intent(Intent.ACTION_VIEW)','setData(Uri.parse("https://..."))', 'No target class specified'],highlight:2,
+detail:'Common actions: ACTION_VIEW (display data), ACTION_SEND (share), ACTION_PICK (select from list), ACTION_DIAL (open dialer), ACTION_EDIT (edit data). You can also define custom actions.'},
+{tag:'system',tagLabel:'Resolution',title:'PackageManager scans all intent filters',
+desc:'AMS asks PackageManager to find ALL components (across all installed apps) whose intent-filter declarations match the Intent. Matching checks three things: Action, Data (URI scheme + MIME type), and Category.',
+flow:['Scan all <intent-filter> in manifests','Match: action + data + category','Build list of candidates'],highlight:1,
+detail:'A component matches only if ALL three tests pass. Action must match one declared action. Data must match the URI scheme and MIME type. Category DEFAULT is required for Activities started with startActivity().'},
+{tag:'system',tagLabel:'Filter Tests',title:'The three intent filter tests in detail',
+desc:'Action test: Intent action must match at least one action in the filter. Data test: URI scheme, host, path, and MIME type must all match. Category test: every category in the Intent must exist in the filter. DEFAULT category is auto-added by startActivity().',
+flow:['1. Action test (must match one)','2. Data test (scheme+type)','3. Category test (all must match)'],highlight:0,
+detail:'If a filter declares no data, it only matches intents with no data. If a filter declares MIME type but no URI scheme, content:// and file:// schemes are assumed. These rules are defined in the Android documentation for IntentFilter.'},
+{tag:'implicit',tagLabel:'Chooser',title:'User picks from matching apps (or default)',
+desc:'If multiple apps match: the system shows a chooser dialog. If the user previously set a default ("Always"), it opens directly. You can force the chooser with Intent.createChooser() to always let the user pick.',
+flow:['Multiple matches → Chooser dialog','User selects "Just once" or "Always"','createChooser() forces selection'],highlight:0,
+detail:'Best practice: always wrap implicit intents with createChooser() to avoid crashes when no app handles the intent. Check resolveActivity() first: if it returns null, no app can handle it.'},
+{tag:'security',tagLabel:'Security',title:'Intent security — preventing interception',
+desc:'Implicit intents are visible to all apps. A malicious app can register matching intent-filters to intercept sensitive data. For sharing sensitive data, prefer explicit intents or use signature-level permissions.',
+flow:['Malicious app registers matching filter','Can intercept implicit intents','Use explicit intents for sensitive data'],highlight:0,
+detail:'Android 12+ restricts intent-filter visibility. You must declare <queries> in your manifest to see other apps\' intent filters. Without it, resolveActivity() returns null even if matching apps exist.'},
+{tag:'system',tagLabel:'PendingIntent',title:'PendingIntent — delegated intent execution',
+desc:'A PendingIntent wraps an Intent and grants another app (or the system) permission to execute it later AS YOUR APP. Used in notifications, alarms, and widgets. The flags control mutability and behavior on re-creation.',
+flow:['PendingIntent.getActivity(ctx, code, intent, flags)','Wraps intent with your identity','Executed later by system/other app'],highlight:1,
+detail:'Android 12+ requires explicitly declaring FLAG_MUTABLE or FLAG_IMMUTABLE. Use IMMUTABLE by default unless the intent needs to be modified (e.g., inline reply in notifications). Mutable PendingIntents are a security risk.'}
+];
+
+let eCur=0,eTimer=null,iCur=0,iTimer=null;
+function bDots(p,c){let h='';for(let i=0;i<c;i++)h+=`<span id="${p}-d-${i}" class="dot"></span>`;h+=`<span style="font-size:12px;color:var(--tt);margin-left:6px" id="${p}-cnt"></span>`;document.getElementById(p+'-dots').innerHTML=h}
+function rnd(p,steps,i){const s=steps[i],c=document.getElementById(p+'-card');c.innerHTML='';c.className='step-enter';void c.offsetWidth;
+const fh=s.flow.map((f,j)=>`<span class="flow-box${j===s.highlight?' hi':''}">${f}</span>${j<s.flow.length-1?'<span class="flow-arr">→</span>':''}`).join('');
+c.innerHTML=`<span class="pill ${tagCls[s.tag]}">${s.tagLabel}</span><div style="font-size:16px;font-weight:500;margin-bottom:8px">${s.title}</div><div style="font-size:14px;color:var(--ts);line-height:1.6;margin-bottom:12px">${s.desc}</div><div class="flow-row">${fh}</div><div style="margin-top:12px;border-left:2px solid var(--ci);padding-left:12px;font-size:12px;color:var(--ts);line-height:1.5">${s.detail}</div>`;
+for(let j=0;j<steps.length;j++){document.getElementById(p+'-d-'+j).className='dot'+(j===i?' active':j<i?' done':'')}
+document.getElementById(p+'-cnt').textContent=`Step ${i+1} of ${steps.length}`;
+document.getElementById(p+'-prev').disabled=i===0;document.getElementById(p+'-next').disabled=i===steps.length-1}
+function eMove(d){const n=Math.max(0,Math.min(eSteps.length-1,eCur+d));if(n===eCur)return;eCur=n;rnd('e',eSteps,eCur)}
+function eToggleAuto(){const b=document.getElementById('e-auto');if(eTimer){clearInterval(eTimer);eTimer=null;b.textContent='▶ Auto-play'}else{b.textContent='⏸ Pause';eTimer=setInterval(()=>{if(eCur<eSteps.length-1){eCur++;rnd('e',eSteps,eCur)}else{clearInterval(eTimer);eTimer=null;b.textContent='▶ Auto-play'}},3000)}}
+function iMove(d){const n=Math.max(0,Math.min(iSteps.length-1,iCur+d));if(n===iCur)return;iCur=n;rnd('i',iSteps,iCur)}
+function iToggleAuto(){const b=document.getElementById('i-auto');if(iTimer){clearInterval(iTimer);iTimer=null;b.textContent='▶ Auto-play'}else{b.textContent='⏸ Pause';iTimer=setInterval(()=>{if(iCur<iSteps.length-1){iCur++;rnd('i',iSteps,iCur)}else{clearInterval(iTimer);iTimer=null;b.textContent='▶ Auto-play'}},3000)}}
+function switchTab(t){document.getElementById('sec-exp').style.display=t==='exp'?'block':'none';document.getElementById('sec-imp').style.display=t==='imp'?'block':'none';document.getElementById('tab-exp').classList.toggle('active',t==='exp');document.getElementById('tab-imp').classList.toggle('active',t==='imp')}
+bDots('e',eSteps.length);rnd('e',eSteps,0);bDots('i',iSteps.length);rnd('i',iSteps,0);
+</script>

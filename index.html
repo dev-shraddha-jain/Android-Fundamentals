@@ -186,14 +186,14 @@
       navContainer.innerHTML = '';
       flatFileList = [];
 
-      structure.sort((a, b) => a.is_root ? -1 : b.is_root ? 1 : a.path.localeCompare(b.path));
+      // Respect the order defined in structure.json
 
       structure.forEach(folder => {
         if (folder.files.length === 0) return;
         
         const section = document.createElement('div');
         section.className = 'nav-section';
-        const title = folder.is_root ? 'Introduction' : folder.path.replace(/\//g, ' › ');
+        const title = folder.is_root ? (folder.name || 'Introduction') : folder.name;
         section.innerHTML = `<h2>${title}</h2><ul class="nav-links"></ul>`;
         const list = section.querySelector('ul');
 

@@ -1,0 +1,147 @@
+
+<h2 class="sr-only">Android Service mechanism — Started, Bound, and Foreground service lifecycle flows</h2>
+<style>
+:root{--cb:#e2e8f0;--ct:#cbd5e1;--ci:#94a3b8;--tp:#334155;--ts:#64748b;--tt:#94a3b8;--ti:#64748b;--tc:#10b981;--tw:#d97706;--td:#8b5cf6;--bp:#fff;--bs:#f8fafc;--bi:#f1f5f9;--bg:#ecfdf5;--bw:#fef3c7;--bd:#f5f3ff;--br:8px}
+body{font-family:'Inter',-apple-system,sans-serif;margin:0;color:var(--tp)}
+@media(prefers-reduced-motion:no-preference){.step-enter{animation:fadeSlide .35s ease forwards}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--cb);transition:background .2s,transform .2s;flex-shrink:0}.dot.active{background:var(--ti);transform:scale(1.3)}.dot.done{background:var(--tc)}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+.tag-started{background:var(--bg);color:var(--tc)}.tag-bound{background:var(--bw);color:var(--tw)}.tag-foreground{background:var(--bd);color:var(--td)}.tag-system{background:var(--bi);color:var(--ti)}
+.flow-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.flow-box{font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid var(--cb);color:var(--ts);background:var(--bs)}.flow-box.hi{border-color:var(--ci);color:var(--ti);background:var(--bi);font-weight:500}
+.flow-arr{color:var(--tt);font-size:13px}
+.nav-btn{font-size:13px;padding:6px 18px;cursor:pointer;border-radius:6px;border:1px solid var(--cb);background:#fff;color:var(--ts);transition:all .2s}.nav-btn:hover:not(:disabled){background:var(--bi);border-color:var(--ci);color:var(--tp)}.nav-btn:disabled{opacity:.5;cursor:not-allowed}
+.tab{font-size:13px;padding:8px 20px;cursor:pointer;border-radius:6px 6px 0 0;border:1px solid var(--cb);border-bottom:none;background:var(--bs);color:var(--ts);transition:all .2s;font-weight:500}.tab.active{background:var(--bp);color:var(--tp);border-color:var(--ct)}.tab:hover:not(.active){background:var(--bi)}
+</style>
+
+<div style="padding:1rem 0">
+<div style="display:flex;gap:4px;margin-bottom:0;flex-wrap:wrap">
+<button class="tab active" id="tab-st" onclick="switchTab('st')">▶ Started Service</button>
+<button class="tab" id="tab-bd" onclick="switchTab('bd')">🔗 Bound Service</button>
+<button class="tab" id="tab-fg" onclick="switchTab('fg')">🔔 Foreground Service</button>
+</div>
+<div style="border:1px solid var(--ct);border-radius:0 var(--br) var(--br) var(--br);padding:1.25rem">
+
+<div id="sec-st">
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap" id="st-dots"></div>
+<div id="st-card" style="border:.5px solid var(--ct);border-radius:var(--br);padding:1.25rem 1.5rem;background:var(--bp);min-height:210px"></div>
+<div style="display:flex;gap:10px;margin-top:1rem;align-items:center">
+<button class="nav-btn" id="st-prev" onclick="stMove(-1)">← Prev</button>
+<button class="nav-btn" id="st-next" onclick="stMove(1)">Next →</button>
+<button class="nav-btn" id="st-auto" onclick="stAuto()" style="margin-left:auto">▶ Auto-play</button>
+</div>
+</div>
+
+<div id="sec-bd" style="display:none">
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap" id="bd-dots"></div>
+<div id="bd-card" style="border:.5px solid var(--ct);border-radius:var(--br);padding:1.25rem 1.5rem;background:var(--bp);min-height:210px"></div>
+<div style="display:flex;gap:10px;margin-top:1rem;align-items:center">
+<button class="nav-btn" id="bd-prev" onclick="bdMove(-1)">← Prev</button>
+<button class="nav-btn" id="bd-next" onclick="bdMove(1)">Next →</button>
+<button class="nav-btn" id="bd-auto" onclick="bdAuto()" style="margin-left:auto">▶ Auto-play</button>
+</div>
+</div>
+
+<div id="sec-fg" style="display:none">
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap" id="fg-dots"></div>
+<div id="fg-card" style="border:.5px solid var(--ct);border-radius:var(--br);padding:1.25rem 1.5rem;background:var(--bp);min-height:210px"></div>
+<div style="display:flex;gap:10px;margin-top:1rem;align-items:center">
+<button class="nav-btn" id="fg-prev" onclick="fgMove(-1)">← Prev</button>
+<button class="nav-btn" id="fg-next" onclick="fgMove(1)">Next →</button>
+<button class="nav-btn" id="fg-auto" onclick="fgAuto()" style="margin-left:auto">▶ Auto-play</button>
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+const tagCls={started:'tag-started',bound:'tag-bound',foreground:'tag-foreground',system:'tag-system'};
+const stSteps=[
+{tag:'started',tagLabel:'Start',title:'Client calls startService(intent)',
+desc:'An Activity (or other component) calls startService() or ContextCompat.startForegroundService(). The Intent identifies the Service class. If the Service isn\'t running, the system creates it first.',
+flow:['startService(intent)','System checks: running?','No → create Service process'],highlight:0,
+detail:'startService() can be called multiple times. Each call triggers onStartCommand() but NOT onCreate() (which only runs once when the Service is first created).'},
+{tag:'started',tagLabel:'Lifecycle',title:'onCreate() — one-time initialization',
+desc:'Called only when the Service is first created. Set up threads, database connections, or any resources needed for the Service\'s lifetime. This is NOT called again if startService() is called while the Service is already running.',
+flow:['Service created','onCreate()','Initialize resources'],highlight:1,
+detail:'Unlike Activities, Services don\'t have onStart/onResume. The lifecycle is simpler: onCreate → onStartCommand (repeated) → onDestroy.'},
+{tag:'started',tagLabel:'Lifecycle',title:'onStartCommand() — handle each request',
+desc:'Called every time a client calls startService(). Receives the Intent with work parameters. Returns a constant that tells the system what to do if the Service is killed: START_STICKY, START_NOT_STICKY, or START_REDELIVER_INTENT.',
+flow:['onStartCommand(intent, flags, startId)','Process work','Return START_STICKY/NOT_STICKY'],highlight:0,
+detail:'START_STICKY: system recreates Service but with null intent. START_NOT_STICKY: don\'t recreate unless pending intents exist. START_REDELIVER_INTENT: recreate and redeliver the last intent.'},
+{tag:'system',tagLabel:'Running',title:'Service runs independently of the caller',
+desc:'Once started, the Service continues running even if the Activity that started it is destroyed. The Service runs on the MAIN THREAD by default — you must create worker threads or use coroutines for heavy work.',
+flow:['Activity destroyed','Service still running','Main thread — offload work!'],highlight:2,
+detail:'A started Service has no automatic timeout. It runs until stopSelf() or stopService() is called, or the system kills it for memory. Always stop the Service when work is complete.'},
+{tag:'started',tagLabel:'Shutdown',title:'stopSelf() or stopService() → onDestroy()',
+desc:'When work is complete, the Service calls stopSelf() (or a client calls stopService()). The system calls onDestroy() for cleanup. If multiple requests are in flight, use stopSelf(startId) to stop only when the last request completes.',
+flow:['stopSelf() or stopService()','onDestroy()','Release all resources'],highlight:1,
+detail:'If you call startService() 5 times, you get 5 onStartCommand() calls with different startIds. stopSelf(startId) only stops the Service if no newer requests arrived after that startId.'}
+];
+const bdSteps=[
+{tag:'bound',tagLabel:'Bind',title:'Client calls bindService(intent, connection, flags)',
+desc:'An Activity or other component calls bindService() with a ServiceConnection callback. The system creates the Service (if not running) and establishes a client-server connection. The flag BIND_AUTO_CREATE ensures the Service is created.',
+flow:['bindService(intent, conn, flags)','System creates Service','Establish connection'],highlight:0,
+detail:'bindService() is asynchronous — the connection is not immediately available. You receive the IBinder in the ServiceConnection.onServiceConnected() callback.'},
+{tag:'bound',tagLabel:'Lifecycle',title:'onCreate() → onBind() — return the IBinder',
+desc:'The Service is created (onCreate), then onBind(Intent) is called. You return an IBinder object that clients use to communicate with the Service. For local (same-process) services, extend Binder and return it.',
+flow:['onCreate()','onBind(intent)','Return IBinder to client'],highlight:2,
+detail:'Three IPC approaches: (1) Extend Binder for local services, (2) Use Messenger for simple cross-process, (3) Use AIDL for full cross-process with threading support.'},
+{tag:'bound',tagLabel:'Connected',title:'onServiceConnected() — client gets IBinder',
+desc:'The system delivers the IBinder to the client\'s ServiceConnection.onServiceConnected() callback. The client can now call methods on the Service directly (local) or send Messages (cross-process). Multiple clients can bind simultaneously.',
+flow:['ServiceConnection callback','onServiceConnected(name, binder)','Client calls Service methods'],highlight:1,
+detail:'If the Service is already running and bound, new bind requests receive the same IBinder (onBind is only called once per Intent). Use onRebind() if you override onUnbind() to return true.'},
+{tag:'bound',tagLabel:'Unbind',title:'Client unbinds — unbindService(connection)',
+desc:'When the client no longer needs the Service, it calls unbindService(). The system calls onUnbind() on the Service. If this was the LAST bound client, the system destroys the Service (unless it was also started with startService).',
+flow:['unbindService(connection)','onUnbind()','Last client? → onDestroy()'],highlight:2,
+detail:'Always unbind in the appropriate lifecycle method. If you bind in onStart(), unbind in onStop(). Binding in onCreate() and unbinding in onDestroy() keeps the Service alive during config changes.'},
+{tag:'system',tagLabel:'Lifecycle',title:'Mixed mode — Started + Bound Service',
+desc:'A Service can be BOTH started and bound simultaneously. In this case, it stays alive as long as it\'s either started OR has bound clients. It\'s only destroyed when BOTH stopService() is called AND all clients unbind.',
+flow:['startService() + bindService()','Survives unbind if started','Destroyed when both stop + unbind'],highlight:2,
+detail:'This pattern is common for music players: startService() keeps playback going, bindService() lets the Activity control playback. The Service survives Activity destruction.'}
+];
+const fgSteps=[
+{tag:'foreground',tagLabel:'Requirement',title:'Why Foreground Services exist',
+desc:'Android increasingly restricts background work to save battery. Foreground Services are for tasks the user is actively aware of — music playback, navigation, fitness tracking. They display a persistent notification so the user knows work is happening.',
+flow:['User-visible work needed','Must show notification','High process priority'],highlight:2,
+detail:'Since Android 12 (API 31), you must declare the specific foreground service TYPE in the manifest: dataSync, mediaPlayback, location, camera, microphone, etc.'},
+{tag:'foreground',tagLabel:'Start',title:'startForegroundService() → startForeground()',
+desc:'The client calls ContextCompat.startForegroundService(). The Service MUST call startForeground(notificationId, notification) within 5 seconds, or the system throws a RemoteServiceException and kills the Service.',
+flow:['startForegroundService()','onCreate() → build notification','startForeground(id, notif) within 5s'],highlight:2,
+detail:'The 5-second window is strict. Build your notification in onCreate() and call startForeground() immediately in onStartCommand(). Do NOT start async work before calling startForeground().'},
+{tag:'foreground',tagLabel:'Running',title:'Foreground Service runs with high priority',
+desc:'Once promoted to foreground, the Service has almost the same priority as a visible Activity. The system will NOT kill it for memory reclamation. The persistent notification keeps the user informed and provides controls (pause/stop).',
+flow:['High-priority process','Notification always visible','System won\'t kill for memory'],highlight:0,
+detail:'Foreground Services survive Doze mode but may be throttled. On Android 12+, the system shows a new "App is running in background" notification for long-running foreground services.'},
+{tag:'foreground',tagLabel:'Android 14+',title:'New restrictions — type declarations required',
+desc:'Android 14 (API 34) strictly enforces foreground service types. You must declare the type in manifest AND hold corresponding runtime permissions. Using "dataSync" requires network permissions. Using "location" requires ACCESS_FINE_LOCATION.',
+flow:['Declare type in manifest','Request runtime permissions','System validates at runtime'],highlight:1,
+detail:'Types: dataSync, mediaPlayback, phoneCall, location, connectedDevice, mediaProjection, camera, microphone, health, remoteMessaging, systemExempted, shortService, specialUse.'},
+{tag:'foreground',tagLabel:'Stop',title:'stopForeground() and stopSelf()',
+desc:'Call stopForeground(STOP_FOREGROUND_REMOVE) to remove the notification and demote from foreground (but Service keeps running). Then call stopSelf() to fully destroy the Service. Or the client calls stopService().',
+flow:['stopForeground(REMOVE)','Notification dismissed','stopSelf() → onDestroy()'],highlight:2,
+detail:'You can also call stopForeground(STOP_FOREGROUND_DETACH) to keep the notification visible but detach it from the Service\'s lifecycle — useful when work is complete but you want the notification to linger.'}
+];
+
+let stC=0,stT=null,bdC=0,bdT=null,fgC=0,fgT=null;
+function bDots(p,c){let h='';for(let i=0;i<c;i++)h+=`<span id="${p}-d-${i}" class="dot"></span>`;h+=`<span style="font-size:12px;color:var(--tt);margin-left:6px" id="${p}-cnt"></span>`;document.getElementById(p+'-dots').innerHTML=h}
+function rnd(p,steps,i){const s=steps[i],c=document.getElementById(p+'-card');c.innerHTML='';c.className='step-enter';void c.offsetWidth;
+const fh=s.flow.map((f,j)=>`<span class="flow-box${j===s.highlight?' hi':''}">${f}</span>${j<s.flow.length-1?'<span class="flow-arr">→</span>':''}`).join('');
+c.innerHTML=`<span class="pill ${tagCls[s.tag]}">${s.tagLabel}</span><div style="font-size:16px;font-weight:500;margin-bottom:8px">${s.title}</div><div style="font-size:14px;color:var(--ts);line-height:1.6;margin-bottom:12px">${s.desc}</div><div class="flow-row">${fh}</div><div style="margin-top:12px;border-left:2px solid var(--ci);padding-left:12px;font-size:12px;color:var(--ts);line-height:1.5">${s.detail}</div>`;
+for(let j=0;j<steps.length;j++){document.getElementById(p+'-d-'+j).className='dot'+(j===i?' active':j<i?' done':'')}
+document.getElementById(p+'-cnt').textContent=`Step ${i+1} of ${steps.length}`;
+document.getElementById(p+'-prev').disabled=i===0;document.getElementById(p+'-next').disabled=i===steps.length-1}
+
+function stMove(d){const n=Math.max(0,Math.min(stSteps.length-1,stC+d));if(n===stC)return;stC=n;rnd('st',stSteps,stC)}
+function bdMove(d){const n=Math.max(0,Math.min(bdSteps.length-1,bdC+d));if(n===bdC)return;bdC=n;rnd('bd',bdSteps,bdC)}
+function fgMove(d){const n=Math.max(0,Math.min(fgSteps.length-1,fgC+d));if(n===fgC)return;fgC=n;rnd('fg',fgSteps,fgC)}
+function mkAuto(getter,setter,timerGet,timerSet,steps,prefix){return function(){const b=document.getElementById(prefix+'-auto');if(timerGet()){clearInterval(timerGet());timerSet(null);b.textContent='▶ Auto-play'}else{b.textContent='⏸ Pause';timerSet(setInterval(()=>{if(getter()<steps.length-1){setter(getter()+1);rnd(prefix,steps,getter())}else{clearInterval(timerGet());timerSet(null);b.textContent='▶ Auto-play'}},3000))}}}
+function stAuto(){const b=document.getElementById('st-auto');if(stT){clearInterval(stT);stT=null;b.textContent='▶ Auto-play'}else{b.textContent='⏸ Pause';stT=setInterval(()=>{if(stC<stSteps.length-1){stC++;rnd('st',stSteps,stC)}else{clearInterval(stT);stT=null;b.textContent='▶ Auto-play'}},3000)}}
+function bdAuto(){const b=document.getElementById('bd-auto');if(bdT){clearInterval(bdT);bdT=null;b.textContent='▶ Auto-play'}else{b.textContent='⏸ Pause';bdT=setInterval(()=>{if(bdC<bdSteps.length-1){bdC++;rnd('bd',bdSteps,bdC)}else{clearInterval(bdT);bdT=null;b.textContent='▶ Auto-play'}},3000)}}
+function fgAuto(){const b=document.getElementById('fg-auto');if(fgT){clearInterval(fgT);fgT=null;b.textContent='▶ Auto-play'}else{b.textContent='⏸ Pause';fgT=setInterval(()=>{if(fgC<fgSteps.length-1){fgC++;rnd('fg',fgSteps,fgC)}else{clearInterval(fgT);fgT=null;b.textContent='▶ Auto-play'}},3000)}}
+
+function switchTab(t){['st','bd','fg'].forEach(x=>{document.getElementById('sec-'+x).style.display=x===t?'block':'none';document.getElementById('tab-'+x).classList.toggle('active',x===t)})}
+bDots('st',stSteps.length);rnd('st',stSteps,0);bDots('bd',bdSteps.length);rnd('bd',bdSteps,0);bDots('fg',fgSteps.length);rnd('fg',fgSteps,0);
+</script>

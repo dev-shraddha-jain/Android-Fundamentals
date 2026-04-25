@@ -30,6 +30,10 @@ registerReceiver(br, filter)
   +----------------------+
 ```
 
+### 🎬 Interactive Mechanism Walkthrough
+
+<iframe src="broadcast_receiver_mechanism.html" width="100%" height="450px" style="border:none; border-radius: 8px; margin: 1.5rem 0;"></iframe>
+
 ## 🧠 Core Idea
 > **Security:** Use `LocalBroadcastManager` (deprecated but still seen) or `LiveData/Flow` for internal app events to prevent external apps from intercepting your data.
 

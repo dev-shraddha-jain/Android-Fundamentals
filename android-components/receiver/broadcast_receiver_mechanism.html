@@ -1,0 +1,113 @@
+
+<h2 class="sr-only">Broadcast Receiver mechanism — how system-wide events are delivered to apps</h2>
+<style>
+:root{--cb:#e2e8f0;--ct:#cbd5e1;--ci:#94a3b8;--tp:#334155;--ts:#64748b;--tt:#94a3b8;--ti:#64748b;--tc:#10b981;--tw:#d97706;--td:#8b5cf6;--bp:#fff;--bs:#f8fafc;--bi:#f1f5f9;--bg:#ecfdf5;--bw:#fef3c7;--bd:#f5f3ff;--br:8px}
+body{font-family:'Inter',-apple-system,sans-serif;margin:0;color:var(--tp)}
+@media(prefers-reduced-motion:no-preference){.step-enter{animation:fadeSlide .35s ease forwards}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--cb);transition:background .2s,transform .2s;flex-shrink:0}.dot.active{background:var(--ti);transform:scale(1.3)}.dot.done{background:var(--tc)}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+.tag-system{background:var(--bw);color:var(--tw)}.tag-app{background:var(--bg);color:var(--tc)}.tag-security{background:var(--bd);color:var(--td)}.tag-lifecycle{background:var(--bi);color:var(--ti)}
+.flow-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.flow-box{font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid var(--cb);color:var(--ts);background:var(--bs)}.flow-box.hi{border-color:var(--ci);color:var(--ti);background:var(--bi);font-weight:500}
+.flow-arr{color:var(--tt);font-size:13px}
+.nav-btn{font-size:13px;padding:6px 18px;cursor:pointer;border-radius:6px;border:1px solid var(--cb);background:#fff;color:var(--ts);transition:all .2s}.nav-btn:hover:not(:disabled){background:var(--bi);border-color:var(--ci);color:var(--tp)}.nav-btn:disabled{opacity:.5;cursor:not-allowed}
+.tab{font-size:13px;padding:8px 20px;cursor:pointer;border-radius:6px 6px 0 0;border:1px solid var(--cb);border-bottom:none;background:var(--bs);color:var(--ts);transition:all .2s;font-weight:500}.tab.active{background:var(--bp);color:var(--tp);border-color:var(--ct)}.tab:hover:not(.active){background:var(--bi)}
+</style>
+
+<div style="padding:1rem 0">
+<div style="display:flex;gap:4px;margin-bottom:0">
+<button class="tab active" id="tab-sys" onclick="switchTab('sys')">📡 System Broadcast Flow</button>
+<button class="tab" id="tab-reg" onclick="switchTab('reg')">🔧 Static vs Dynamic Registration</button>
+</div>
+<div style="border:1px solid var(--ct);border-radius:0 var(--br) var(--br) var(--br);padding:1.25rem">
+
+<div id="sec-sys">
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap" id="s-dots"></div>
+<div id="s-card" style="border:.5px solid var(--ct);border-radius:var(--br);padding:1.25rem 1.5rem;background:var(--bp);min-height:210px"></div>
+<div style="display:flex;gap:10px;margin-top:1rem;align-items:center">
+<button class="nav-btn" id="s-prev" onclick="sMove(-1)">← Prev</button>
+<button class="nav-btn" id="s-next" onclick="sMove(1)">Next →</button>
+<button class="nav-btn" id="s-auto" onclick="sToggleAuto()" style="margin-left:auto">▶ Auto-play</button>
+</div>
+</div>
+
+<div id="sec-reg" style="display:none">
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap" id="r-dots"></div>
+<div id="r-card" style="border:.5px solid var(--ct);border-radius:var(--br);padding:1.25rem 1.5rem;background:var(--bp);min-height:210px"></div>
+<div style="display:flex;gap:10px;margin-top:1rem;align-items:center">
+<button class="nav-btn" id="r-prev" onclick="rMove(-1)">← Prev</button>
+<button class="nav-btn" id="r-next" onclick="rMove(1)">Next →</button>
+<button class="nav-btn" id="r-auto" onclick="rToggleAuto()" style="margin-left:auto">▶ Auto-play</button>
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+const tagCls={system:'tag-system',app:'tag-app',security:'tag-security',lifecycle:'tag-lifecycle'};
+const sSteps=[
+{tag:'system',tagLabel:'System Event',title:'A system event occurs (e.g. battery low)',
+desc:'The Android system detects a hardware or software state change — battery dropping below threshold, airplane mode toggled, Wi-Fi connected, screen turned off, boot completed, etc. The system prepares to broadcast this event.',
+flow:['Hardware/OS event','System creates Intent','ACTION_BATTERY_LOW'],highlight:0,
+detail:'System broadcasts use well-known action strings defined in Intent class. Some are "sticky" (deprecated) — they stay around for late receivers. Most modern broadcasts are "normal" (one-shot delivery).'},
+{tag:'system',tagLabel:'System',title:'System creates a broadcast Intent',
+desc:'The system constructs an Intent with the appropriate action string. For ordered broadcasts, priority determines delivery order. For normal broadcasts, all receivers get the Intent roughly simultaneously.',
+flow:['Intent(ACTION_BATTERY_LOW)','Normal or Ordered?','sendBroadcast() / sendOrderedBroadcast()'],highlight:0,
+detail:'Normal broadcasts: all receivers notified in parallel, cannot be aborted. Ordered broadcasts: delivered one at a time by priority, each receiver can modify or abort the broadcast for lower-priority receivers.'},
+{tag:'system',tagLabel:'System',title:'PackageManager scans registered receivers',
+desc:'The ActivityManagerService (AMS) asks PackageManager to find all BroadcastReceivers that match the Intent\'s action. It checks both: (1) manifest-declared (static) receivers, and (2) context-registered (dynamic) receivers in running apps.',
+flow:['AMS receives broadcast','Scan manifest receivers','Scan runtime receivers'],highlight:1,
+detail:'Since Android 8.0 (API 26), most implicit broadcasts no longer wake up static receivers. This was done to reduce battery drain — apps can\'t register for CONNECTIVITY_CHANGE in manifest anymore.'},
+{tag:'app',tagLabel:'App Code',title:'onReceive() is called on each matching receiver',
+desc:'For each matching receiver, the system delivers the Intent to onReceive(Context, Intent). This runs on the MAIN THREAD. You have roughly 10 seconds to complete your work — after that, the system considers the receiver unresponsive.',
+flow:['Match found','onReceive(context, intent)','10-second time limit'],highlight:1,
+detail:'onReceive() runs on the main thread even if the receiver was registered from a background thread. For long work, use goAsync() to get a PendingResult (extends to 30 seconds) or start a WorkManager/Service from here.'},
+{tag:'lifecycle',tagLabel:'Lifecycle',title:'Receiver process lifecycle after onReceive()',
+desc:'Once onReceive() returns, the system considers the BroadcastReceiver no longer active. If the receiver\'s process has no other active components (Activities, Services), the system may kill it at any time — it becomes a low-priority process.',
+flow:['onReceive() returns','Process priority drops','System may kill process'],highlight:2,
+detail:'Never start async work (threads/coroutines) directly in onReceive() — the process may be killed before it completes. Use goAsync() or delegate to WorkManager/JobIntentService.'},
+{tag:'security',tagLabel:'Security',title:'Permission enforcement and security considerations',
+desc:'Broadcasts can be permission-protected. The sender can require receivers to hold a specific permission, and receivers can require the sender to hold a permission. This prevents unauthorized apps from intercepting sensitive broadcasts.',
+flow:['Sender permission check','Receiver permission check','LocalBroadcastManager (deprecated)'],highlight:0,
+detail:'For app-internal events, prefer LiveData/Flow/EventBus over broadcasts. If you must broadcast internally, use exported="false" on static receivers. For cross-app broadcasts, always use custom permissions.'}
+];
+const rSteps=[
+{tag:'app',tagLabel:'Static',title:'Static registration — declared in AndroidManifest.xml',
+desc:'You declare a <receiver> element in your manifest with <intent-filter>. The system knows about this receiver even when your app is not running. On matching broadcasts, the system starts your app process and calls onReceive().',
+flow:['<receiver> in Manifest','App not running','System wakes app → onReceive()'],highlight:2,
+detail:'Since Android 8.0+, most implicit broadcast receivers declared in manifest NO LONGER WORK. Exceptions: BOOT_COMPLETED, LOCALE_CHANGED, MY_PACKAGE_REPLACED, and a few others. Use dynamic registration instead.'},
+{tag:'app',tagLabel:'Dynamic',title:'Dynamic registration — registerReceiver() in code',
+desc:'You create a BroadcastReceiver instance and register it at runtime using registerReceiver(receiver, intentFilter). The receiver only works while your component (Activity/Service) is active. You MUST unregister in onDestroy/onStop.',
+flow:['registerReceiver(receiver, filter)','Active while component lives','unregisterReceiver() required'],highlight:0,
+detail:'If you register in onResume(), unregister in onPause(). If in onCreate(), unregister in onDestroy(). Forgetting to unregister causes memory leaks — the system logs a "leaked IntentReceiver" error.'},
+{tag:'lifecycle',tagLabel:'Comparison',title:'When does each type receive broadcasts?',
+desc:'Static receivers can wake your app from a dead state but are restricted post-Android 8. Dynamic receivers only work when explicitly registered but have no restrictions on implicit broadcasts. Your choice depends on whether the app needs to respond when it\'s not running.',
+flow:['Static: survives app death (limited)','Dynamic: only while registered','Choose based on use case'],highlight:2,
+detail:'Best practice: use dynamic registration for most cases. For essential system events that need to work when the app is dead (BOOT_COMPLETED), use static registration with explicit broadcast support.'},
+{tag:'app',tagLabel:'Context',title:'Context-registered receiver scope',
+desc:'Receivers registered with Activity context die with the Activity. Receivers registered with Application context survive until unregistered or app process dies. Using Application context is useful for app-wide listeners but risks leaks if not managed.',
+flow:['Activity context → dies with Activity','App context → lives with process','Service context → dies with Service'],highlight:0,
+detail:'In Jetpack, use LifecycleObserver or ProcessLifecycleOwner to auto-manage registration. This prevents the common bug of forgetting to unregister.'},
+{tag:'security',tagLabel:'Android 8+',title:'Background execution limits impact on receivers',
+desc:'Android 8.0 introduced strict background limits. Apps targeting API 26+ cannot register for most implicit broadcasts via manifest. The system simply won\'t deliver them. This was done to prevent dozens of apps waking up simultaneously on events like CONNECTIVITY_CHANGE.',
+flow:['API 26+ restriction','Implicit broadcasts blocked in manifest','Use dynamic or explicit broadcasts'],highlight:1,
+detail:'Exempt implicit broadcasts (still work in manifest): BOOT_COMPLETED, ACTION_LOCALE_CHANGED, ACTION_USB_DEVICE_ATTACHED, ACTION_HEADSET_PLUG, ACTION_MY_PACKAGE_REPLACED, and about 15 others listed in official docs.'}
+];
+
+let sCur=0,sTimer=null,rCur=0,rTimer=null;
+function buildDots(p,c){let h='';for(let i=0;i<c;i++)h+=`<span id="${p}-d-${i}" class="dot"></span>`;h+=`<span style="font-size:12px;color:var(--tt);margin-left:6px" id="${p}-cnt"></span>`;document.getElementById(p+'-dots').innerHTML=h}
+function render(p,steps,i){const s=steps[i],c=document.getElementById(p+'-card');c.innerHTML='';c.className='step-enter';void c.offsetWidth;
+const fh=s.flow.map((f,j)=>`<span class="flow-box${j===s.highlight?' hi':''}">${f}</span>${j<s.flow.length-1?'<span class="flow-arr">→</span>':''}`).join('');
+c.innerHTML=`<span class="pill ${tagCls[s.tag]}">${s.tagLabel}</span><div style="font-size:16px;font-weight:500;margin-bottom:8px">${s.title}</div><div style="font-size:14px;color:var(--ts);line-height:1.6;margin-bottom:12px">${s.desc}</div><div class="flow-row">${fh}</div><div style="margin-top:12px;border-left:2px solid var(--ci);padding-left:12px;font-size:12px;color:var(--ts);line-height:1.5">${s.detail}</div>`;
+for(let j=0;j<steps.length;j++){document.getElementById(p+'-d-'+j).className='dot'+(j===i?' active':j<i?' done':'')}
+document.getElementById(p+'-cnt').textContent=`Step ${i+1} of ${steps.length}`;
+document.getElementById(p+'-prev').disabled=i===0;document.getElementById(p+'-next').disabled=i===steps.length-1}
+function sMove(d){const n=Math.max(0,Math.min(sSteps.length-1,sCur+d));if(n===sCur)return;sCur=n;render('s',sSteps,sCur)}
+function sToggleAuto(){const b=document.getElementById('s-auto');if(sTimer){clearInterval(sTimer);sTimer=null;b.textContent='▶ Auto-play'}else{b.textContent='⏸ Pause';sTimer=setInterval(()=>{if(sCur<sSteps.length-1){sCur++;render('s',sSteps,sCur)}else{clearInterval(sTimer);sTimer=null;b.textContent='▶ Auto-play'}},3000)}}
+function rMove(d){const n=Math.max(0,Math.min(rSteps.length-1,rCur+d));if(n===rCur)return;rCur=n;render('r',rSteps,rCur)}
+function rToggleAuto(){const b=document.getElementById('r-auto');if(rTimer){clearInterval(rTimer);rTimer=null;b.textContent='▶ Auto-play'}else{b.textContent='⏸ Pause';rTimer=setInterval(()=>{if(rCur<rSteps.length-1){rCur++;render('r',rSteps,rCur)}else{clearInterval(rTimer);rTimer=null;b.textContent='▶ Auto-play'}},3000)}}
+function switchTab(t){document.getElementById('sec-sys').style.display=t==='sys'?'block':'none';document.getElementById('sec-reg').style.display=t==='reg'?'block':'none';document.getElementById('tab-sys').classList.toggle('active',t==='sys');document.getElementById('tab-reg').classList.toggle('active',t==='reg')}
+buildDots('s',sSteps.length);render('s',sSteps,0);buildDots('r',rSteps.length);render('r',rSteps,0);
+</script>

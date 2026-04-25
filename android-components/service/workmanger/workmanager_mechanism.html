@@ -1,0 +1,123 @@
+
+<h2 class="sr-only">WorkManager mechanism — how guaranteed background work is enqueued, scheduled, and executed</h2>
+<style>
+:root{--cb:#e2e8f0;--ct:#cbd5e1;--ci:#94a3b8;--tp:#334155;--ts:#64748b;--tt:#94a3b8;--ti:#64748b;--tc:#10b981;--tw:#d97706;--td:#8b5cf6;--bp:#fff;--bs:#f8fafc;--bi:#f1f5f9;--bg:#ecfdf5;--bw:#fef3c7;--bd:#f5f3ff;--br:8px}
+body{font-family:'Inter',-apple-system,sans-serif;margin:0;color:var(--tp)}
+@media(prefers-reduced-motion:no-preference){.step-enter{animation:fadeSlide .35s ease forwards}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--cb);transition:background .2s,transform .2s;flex-shrink:0}.dot.active{background:var(--ti);transform:scale(1.3)}.dot.done{background:var(--tc)}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+.tag-app{background:var(--bg);color:var(--tc)}.tag-persist{background:var(--bw);color:var(--tw)}.tag-system{background:var(--bi);color:var(--ti)}.tag-execute{background:var(--bd);color:var(--td)}
+.flow-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.flow-box{font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid var(--cb);color:var(--ts);background:var(--bs)}.flow-box.hi{border-color:var(--ci);color:var(--ti);background:var(--bi);font-weight:500}
+.flow-arr{color:var(--tt);font-size:13px}
+.nav-btn{font-size:13px;padding:6px 18px;cursor:pointer;border-radius:6px;border:1px solid var(--cb);background:#fff;color:var(--ts);transition:all .2s}.nav-btn:hover:not(:disabled){background:var(--bi);border-color:var(--ci);color:var(--tp)}.nav-btn:disabled{opacity:.5;cursor:not-allowed}
+.tab{font-size:13px;padding:8px 20px;cursor:pointer;border-radius:6px 6px 0 0;border:1px solid var(--cb);border-bottom:none;background:var(--bs);color:var(--ts);transition:all .2s;font-weight:500}.tab.active{background:var(--bp);color:var(--tp);border-color:var(--ct)}.tab:hover:not(.active){background:var(--bi)}
+.state{display:inline-block;font-size:11px;padding:3px 10px;border-radius:4px;margin:2px;font-weight:600}
+.st-enq{background:#dbeafe;color:#1e40af}.st-run{background:#fef3c7;color:#92400e}.st-suc{background:#d1fae5;color:#065f46}.st-fail{background:#fecaca;color:#991b1b}.st-retry{background:#e9d5ff;color:#6b21a8}.st-block{background:#f1f5f9;color:#475569}
+</style>
+
+<div style="padding:1rem 0">
+<div style="display:flex;gap:4px;margin-bottom:0;flex-wrap:wrap">
+<button class="tab active" id="tab-flow" onclick="switchTab('flow')">⚙️ Execution Flow</button>
+<button class="tab" id="tab-states" onclick="switchTab('states')">📊 Work States</button>
+</div>
+<div style="border:1px solid var(--ct);border-radius:0 var(--br) var(--br) var(--br);padding:1.25rem">
+
+<div id="sec-flow">
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap" id="f-dots"></div>
+<div id="f-card" style="border:.5px solid var(--ct);border-radius:var(--br);padding:1.25rem 1.5rem;background:var(--bp);min-height:210px"></div>
+<div style="display:flex;gap:10px;margin-top:1rem;align-items:center">
+<button class="nav-btn" id="f-prev" onclick="fMove(-1)">← Prev</button>
+<button class="nav-btn" id="f-next" onclick="fMove(1)">Next →</button>
+<button class="nav-btn" id="f-auto" onclick="fToggleAuto()" style="margin-left:auto">▶ Auto-play</button>
+</div>
+</div>
+
+<div id="sec-states" style="display:none">
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap" id="w-dots"></div>
+<div id="w-card" style="border:.5px solid var(--ct);border-radius:var(--br);padding:1.25rem 1.5rem;background:var(--bp);min-height:210px"></div>
+<div style="display:flex;gap:10px;margin-top:1rem;align-items:center">
+<button class="nav-btn" id="w-prev" onclick="wMove(-1)">← Prev</button>
+<button class="nav-btn" id="w-next" onclick="wMove(1)">Next →</button>
+<button class="nav-btn" id="w-auto" onclick="wToggleAuto()" style="margin-left:auto">▶ Auto-play</button>
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+const tagCls={app:'tag-app',persist:'tag-persist',system:'tag-system',execute:'tag-execute'};
+const fSteps=[
+{tag:'app',tagLabel:'App Code',title:'Define a Worker and create a WorkRequest',
+desc:'You create a class extending Worker (or CoroutineWorker) and override doWork(). Then build a OneTimeWorkRequest or PeriodicWorkRequest with optional Constraints (network, charging, battery), input data, and backoff policy.',
+flow:['class MyWorker : Worker','OneTimeWorkRequest.Builder','setConstraints(), setInputData()'],highlight:0,
+detail:'CoroutineWorker (for Kotlin) runs doWork() on Dispatchers.Default automatically. Regular Worker runs on a background thread from WorkManager\'s internal Executor.'},
+{tag:'persist',tagLabel:'Persistence',title:'WorkManager saves request to internal SQLite DB',
+desc:'When you call workManager.enqueue(request), WorkManager immediately writes the WorkRequest metadata (class name, constraints, input data, retry policy, unique name) into its internal SQLite database. This is the guarantee — the work survives process death.',
+flow:['enqueue(request)','Write to SQLite DB','State → ENQUEUED'],highlight:1,
+detail:'This is the critical design decision that makes WorkManager reliable. Even if the app crashes 1 second after enqueue(), the task is safely on disk and will execute later.'},
+{tag:'system',tagLabel:'Scheduling',title:'WorkManager delegates to the OS scheduler',
+desc:'WorkManager checks the device API level and picks the best system scheduler: JobScheduler (API 23+) or AlarmManager + BroadcastReceiver (older). It registers the work with constraints so the OS wakes the app at the right time.',
+flow:['API 23+ → JobScheduler','API < 23 → AlarmManager','Constraints registered with OS'],highlight:0,
+detail:'On API 23+, WorkManager uses JobScheduler which is battery-efficient and respects Doze mode. The OS batches jobs from multiple apps to reduce wake-ups.'},
+{tag:'system',tagLabel:'Waiting',title:'System monitors constraints',
+desc:'The OS monitors the declared constraints — network availability, charging status, battery level, idle state. The work will NOT execute until ALL constraints are satisfied simultaneously. If constraints stop being met mid-execution, the work may be interrupted.',
+flow:['Network available?','Device charging?','All constraints met → trigger'],highlight:2,
+detail:'PeriodicWork has a minimum interval of 15 minutes (OS-enforced). Within each interval, there\'s a "flex window" where the system picks the optimal moment to run.'},
+{tag:'execute',tagLabel:'Execution',title:'doWork() runs on a background thread',
+desc:'When constraints are met, the system wakes the app (if needed) and WorkManager calls your Worker\'s doWork() method on a background thread. You perform the actual work (upload, sync, process) and return a Result.',
+flow:['System triggers WorkManager','Worker.doWork() called','Background thread execution'],highlight:1,
+detail:'doWork() has a maximum execution time of 10 minutes. For longer work, use a foreground Worker by calling setForeground(ForegroundInfo) which shows a notification.'},
+{tag:'persist',tagLabel:'Resolution',title:'Result determines next action',
+desc:'doWork() returns Result.success(), Result.failure(), or Result.retry(). WorkManager updates the SQLite database accordingly. On retry, it uses exponential backoff. On success/failure, chained work is triggered or cancelled.',
+flow:['Result.success() → mark DONE','Result.failure() → mark FAILED','Result.retry() → reschedule with backoff'],highlight:0,
+detail:'Exponential backoff: first retry after 10 min, then 20, 40, 80... (configurable). Chained work: on success, the next Worker in the chain is enqueued. On failure, dependent work is marked FAILED.'},
+{tag:'system',tagLabel:'Survival',title:'Surviving reboots and process death',
+desc:'After a device reboot, WorkManager receives BOOT_COMPLETED (internally handled). It checks its SQLite DB for pending work, re-registers with JobScheduler, and resumes monitoring constraints. Your code doesn\'t need to handle any of this.',
+flow:['Device reboots','BOOT_COMPLETED received','Re-schedule from SQLite DB'],highlight:1,
+detail:'WorkManager also handles app updates. Pending work persists across app updates as long as the Worker class still exists. If the class was renamed/removed, the work fails gracefully.'}
+];
+const wSteps=[
+{tag:'app',tagLabel:'ENQUEUED',title:'Work is saved and waiting',
+desc:'Immediately after enqueue(), the work enters ENQUEUED state. It\'s persisted in the database and waiting for constraints to be met. You can observe this state via WorkManager.getWorkInfoByIdLiveData(id).',
+flow:['<span class="state st-enq">ENQUEUED</span>','Waiting for constraints','Observable via LiveData'],highlight:0,
+detail:'Unique work (enqueueUniqueWork) can specify conflict resolution: KEEP (ignore new), REPLACE (cancel existing), or APPEND (chain after existing).'},
+{tag:'system',tagLabel:'RUNNING',title:'Work is actively executing',
+desc:'Constraints are met and doWork() is running. The work transitions from ENQUEUED to RUNNING. You can send progress updates from the worker using setProgress(Data) that observers can read in real-time.',
+flow:['<span class="state st-run">RUNNING</span>','doWork() executing','setProgress() for updates'],highlight:0,
+detail:'If the app is killed while work is RUNNING, WorkManager reschedules it after the app restarts. The worker will start from scratch (doWork() is called again from the beginning).'},
+{tag:'app',tagLabel:'SUCCEEDED',title:'Work completed successfully',
+desc:'doWork() returned Result.success(). The work state is permanently SUCCEEDED. Output data (if any) is available to the next worker in a chain or to observers. One-time work stays in this terminal state.',
+flow:['<span class="state st-suc">SUCCEEDED</span>','Output data available','Terminal state (one-time)'],highlight:0,
+detail:'For PeriodicWork, there is no SUCCEEDED state — it goes back to ENQUEUED after each successful run. Only one-time work has terminal states.'},
+{tag:'app',tagLabel:'FAILED',title:'Work failed permanently',
+desc:'doWork() returned Result.failure(). The work is permanently FAILED. Any dependent work in a chain is also marked FAILED (cascading failure). This is a terminal state — the work will NOT be retried.',
+flow:['<span class="state st-fail">FAILED</span>','Chain dependents also fail','Terminal state — no retry'],highlight:0,
+detail:'Use Result.failure(outputData) to pass error information to observers. The UI can show appropriate error messages based on this data.'},
+{tag:'execute',tagLabel:'RETRY',title:'Work will be retried with backoff',
+desc:'doWork() returned Result.retry(). WorkManager reschedules the work with exponential backoff. The state briefly shows as ENQUEUED again. The runAttemptCount increments, which you can check to implement max retry logic.',
+flow:['<span class="state st-retry">ENQUEUED (retry)</span>','Exponential backoff wait','runAttemptCount increments'],highlight:0,
+detail:'Default backoff: LINEAR or EXPONENTIAL, starting at 10 seconds (minimum). You set this via setBackoffCriteria(). Common pattern: return Result.retry() if runAttemptCount < 3, else Result.failure().'},
+{tag:'system',tagLabel:'BLOCKED',title:'Work is waiting for prerequisite work',
+desc:'In a chain (workA.then(workB)), workB starts in BLOCKED state. It won\'t transition to ENQUEUED until workA completes successfully. If workA fails, workB moves directly to FAILED without executing.',
+flow:['<span class="state st-block">BLOCKED</span>','Waiting for prerequisite','Auto-transitions on completion'],highlight:0,
+detail:'Chains can be complex: beginWith(A, B).then(C).then(D) — A and B run in parallel, C runs after both complete, D runs after C. Use combine() for fan-in patterns.'}
+];
+
+let fCur=0,fTimer=null,wCur=0,wTimer=null;
+function bDots(p,c){let h='';for(let i=0;i<c;i++)h+=`<span id="${p}-d-${i}" class="dot"></span>`;h+=`<span style="font-size:12px;color:var(--tt);margin-left:6px" id="${p}-cnt"></span>`;document.getElementById(p+'-dots').innerHTML=h}
+function rnd(p,steps,i){const s=steps[i],c=document.getElementById(p+'-card');c.innerHTML='';c.className='step-enter';void c.offsetWidth;
+const fh=s.flow.map((f,j)=>`<span class="flow-box${j===s.highlight?' hi':''}">${f}</span>${j<s.flow.length-1?'<span class="flow-arr">→</span>':''}`).join('');
+c.innerHTML=`<span class="pill ${tagCls[s.tag]}">${s.tagLabel}</span><div style="font-size:16px;font-weight:500;margin-bottom:8px">${s.title}</div><div style="font-size:14px;color:var(--ts);line-height:1.6;margin-bottom:12px">${s.desc}</div><div class="flow-row">${fh}</div><div style="margin-top:12px;border-left:2px solid var(--ci);padding-left:12px;font-size:12px;color:var(--ts);line-height:1.5">${s.detail}</div>`;
+for(let j=0;j<steps.length;j++){document.getElementById(p+'-d-'+j).className='dot'+(j===i?' active':j<i?' done':'')}
+document.getElementById(p+'-cnt').textContent=`Step ${i+1} of ${steps.length}`;
+document.getElementById(p+'-prev').disabled=i===0;document.getElementById(p+'-next').disabled=i===steps.length-1}
+function fMove(d){const n=Math.max(0,Math.min(fSteps.length-1,fCur+d));if(n===fCur)return;fCur=n;rnd('f',fSteps,fCur)}
+function fToggleAuto(){const b=document.getElementById('f-auto');if(fTimer){clearInterval(fTimer);fTimer=null;b.textContent='▶ Auto-play'}else{b.textContent='⏸ Pause';fTimer=setInterval(()=>{if(fCur<fSteps.length-1){fCur++;rnd('f',fSteps,fCur)}else{clearInterval(fTimer);fTimer=null;b.textContent='▶ Auto-play'}},3000)}}
+function wMove(d){const n=Math.max(0,Math.min(wSteps.length-1,wCur+d));if(n===wCur)return;wCur=n;rnd('w',wSteps,wCur)}
+function wToggleAuto(){const b=document.getElementById('w-auto');if(wTimer){clearInterval(wTimer);wTimer=null;b.textContent='▶ Auto-play'}else{b.textContent='⏸ Pause';wTimer=setInterval(()=>{if(wCur<wSteps.length-1){wCur++;rnd('w',wSteps,wCur)}else{clearInterval(wTimer);wTimer=null;b.textContent='▶ Auto-play'}},3000)}}
+function switchTab(t){document.getElementById('sec-flow').style.display=t==='flow'?'block':'none';document.getElementById('sec-states').style.display=t==='states'?'block':'none';document.getElementById('tab-flow').classList.toggle('active',t==='flow');document.getElementById('tab-states').classList.toggle('active',t==='states')}
+bDots('f',fSteps.length);rnd('f',fSteps,0);bDots('w',wSteps.length);rnd('w',wSteps,0);
+</script>

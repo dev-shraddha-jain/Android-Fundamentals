@@ -4,7 +4,7 @@
 
 A core building block representing a **single screen** with a **user interface**. It acts as the **entry point** for user interaction.
 
-Lifecycle owmer tied to window.
+Lifecycle owner tied to window.
 
 ## 💻 Code Example
 
@@ -39,6 +39,10 @@ onDestroy()  → Activity is removed, clean up
 [ Activity ends ]
 ```
 
+### 🎬 Interactive Lifecycle Walkthrough
+
+<iframe src="activity_lifecycle_and_launch_modes.html" width="100%" height="450px" style="border:none; border-radius: 8px; margin: 1.5rem 0;"></iframe>
+
 ## One-line memory trick:
 **Create → Start → Resume → Pause → Stop → Destroy**
 
@@ -58,6 +62,28 @@ When you rotate the screen, the system **destroys** and **recreates** the Activi
  The system calls `onPause`, `onStop`, and `onDestroy`. 
 
 Then it starts fresh with `onCreate`, `onStart`, and `onResume`. To prevent data loss, developers use `ViewModel` or `onSaveInstanceState`.
+
+## Launch Modes
+
+Launch modes control how a new instance of an Activity is associated with the current task.
+
+Declared in `AndroidManifest.xml`:
+```xml
+<activity
+    android:name=".MyActivity"
+    android:launchMode="singleTop" />
+```
+
+| Mode | Behaviour | Use Case |
+|------|-----------|----------|
+| **standard** | Always creates a new instance | Default — most Activities |
+| **singleTop** | Reuses if already at top of stack (via `onNewIntent()`) | Notification targets, search |
+| **singleTask** | Only one instance system-wide; clears stack above it | Home/dashboard screens |
+| **singleInstance** | Sole Activity in its own exclusive task | System-wide pickers, call screens |
+
+### 🎬 Interactive Launch Modes Walkthrough (A → B → A)
+
+<iframe src="activity_lifecycle_and_launch_modes.html#launch-modes" width="100%" height="520px" style="border:none; border-radius: 8px; margin: 1.5rem 0;"></iframe>
 
 
 ## Important Real-World Notes (Interview Gold)

@@ -198,23 +198,31 @@ main {
 /* Lists Styling */
 .markdown-body ul, 
 .markdown-body ol {
-  padding-left: 2rem;
-  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+  margin-top: 0;
 }
 
 .markdown-body li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .markdown-body li > ul,
 .markdown-body li > ol {
-  margin-top: 0.5rem;
-  margin-bottom: 0;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
   padding-left: 1.5rem;
 }
 
-.markdown-body li p {
-  margin-bottom: 0.5rem;
+/* Fix for paragraphs inside list items to prevent unwanted spacing */
+.markdown-body li > p {
+  margin: 0;
+  display: inline;
+}
+
+.markdown-body li > p + p {
+  display: block;
+  margin-top: 0.5rem;
 }
 
 .markdown-body ul {

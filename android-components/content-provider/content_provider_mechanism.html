@@ -1,0 +1,114 @@
+
+<h2 class="sr-only">Content Provider mechanism — how data flows between apps through ContentResolver</h2>
+<style>
+:root{--cb:#e2e8f0;--ct:#cbd5e1;--ci:#94a3b8;--tp:#334155;--ts:#64748b;--tt:#94a3b8;--ti:#64748b;--tc:#10b981;--tw:#d97706;--td:#8b5cf6;--bp:#fff;--bs:#f8fafc;--bi:#f1f5f9;--bg:#ecfdf5;--bw:#fef3c7;--bd:#f5f3ff;--br:8px}
+body{font-family:'Inter',-apple-system,sans-serif;margin:0;color:var(--tp)}
+@media(prefers-reduced-motion:no-preference){.step-enter{animation:fadeSlide .35s ease forwards}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--cb);transition:background .2s,transform .2s;flex-shrink:0}.dot.active{background:var(--ti);transform:scale(1.3)}.dot.done{background:var(--tc)}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+.tag-client{background:var(--bi);color:var(--ti)}.tag-system{background:var(--bw);color:var(--tw)}.tag-provider{background:var(--bg);color:var(--tc)}.tag-security{background:var(--bd);color:var(--td)}
+.flow-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.flow-box{font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid var(--cb);color:var(--ts);background:var(--bs)}.flow-box.hi{border-color:var(--ci);color:var(--ti);background:var(--bi);font-weight:500}
+.flow-arr{color:var(--tt);font-size:13px}
+.nav-btn{font-size:13px;padding:6px 18px;cursor:pointer;border-radius:6px;border:1px solid var(--cb);background:#fff;color:var(--ts);transition:all .2s}.nav-btn:hover:not(:disabled){background:var(--bi);border-color:var(--ci);color:var(--tp)}.nav-btn:disabled{opacity:.5;cursor:not-allowed}
+.tab{font-size:13px;padding:8px 20px;cursor:pointer;border-radius:6px 6px 0 0;border:1px solid var(--cb);border-bottom:none;background:var(--bs);color:var(--ts);transition:all .2s;font-weight:500}.tab.active{background:var(--bp);color:var(--tp);border-color:var(--ct)}.tab:hover:not(.active){background:var(--bi)}
+</style>
+
+<div style="padding:1rem 0">
+<div style="display:flex;gap:4px;margin-bottom:0">
+<button class="tab active" id="tab-q" onclick="switchTab('q')">📖 Query Flow</button>
+<button class="tab" id="tab-crud" onclick="switchTab('crud')">✏️ CRUD Operations</button>
+</div>
+<div style="border:1px solid var(--ct);border-radius:0 var(--br) var(--br) var(--br);padding:1.25rem">
+
+<div id="sec-q">
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap" id="q-dots"></div>
+<div id="q-card" style="border:.5px solid var(--ct);border-radius:var(--br);padding:1.25rem 1.5rem;background:var(--bp);min-height:210px"></div>
+<div style="display:flex;gap:10px;margin-top:1rem;align-items:center">
+<button class="nav-btn" id="q-prev" onclick="qMove(-1)">← Prev</button>
+<button class="nav-btn" id="q-next" onclick="qMove(1)">Next →</button>
+<button class="nav-btn" id="q-auto" onclick="qToggleAuto()" style="margin-left:auto">▶ Auto-play</button>
+</div>
+</div>
+
+<div id="sec-crud" style="display:none">
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap" id="c-dots"></div>
+<div id="c-card" style="border:.5px solid var(--ct);border-radius:var(--br);padding:1.25rem 1.5rem;background:var(--bp);min-height:210px"></div>
+<div style="display:flex;gap:10px;margin-top:1rem;align-items:center">
+<button class="nav-btn" id="c-prev" onclick="cMove(-1)">← Prev</button>
+<button class="nav-btn" id="c-next" onclick="cMove(1)">Next →</button>
+<button class="nav-btn" id="c-auto" onclick="cToggleAuto()" style="margin-left:auto">▶ Auto-play</button>
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+const tagCls={client:'tag-client',system:'tag-system',provider:'tag-provider',security:'tag-security'};
+const qSteps=[
+{tag:'client',tagLabel:'Client App',title:'Client app requests data via ContentResolver',
+desc:'Your app never talks to a ContentProvider directly. Instead, you call methods on ContentResolver — a system-provided proxy. You pass a URI like content://contacts/people/1 which uniquely identifies the data you want.',
+flow:['contentResolver.query()','URI: content://authority/path','Projection, Selection, Args'],highlight:0,
+detail:'ContentResolver is obtained via context.contentResolver. The URI scheme is always "content://", followed by the authority (unique provider name) and an optional path/ID.'},
+{tag:'system',tagLabel:'System',title:'System resolves the URI to a ContentProvider',
+desc:'Android\'s PackageManager looks up which app registered a ContentProvider with the matching authority. The authority is declared in the provider app\'s AndroidManifest.xml. This is similar to DNS — the URI is resolved to the actual provider.',
+flow:['URI authority extracted','PackageManager lookup','Target ContentProvider found'],highlight:1,
+detail:'Each authority must be globally unique (usually your package name). The system checks if the calling app has the required permissions (readPermission/writePermission) before proceeding.'},
+{tag:'security',tagLabel:'Security',title:'Permission check — can the caller access this data?',
+desc:'Before the ContentProvider receives the request, the system checks if the caller has the required permissions. Providers can declare read/write permissions separately. Without proper permission, the request is rejected with a SecurityException.',
+flow:['Check readPermission','Check grantUriPermission','SecurityException if denied'],highlight:0,
+detail:'Temporary URI permissions can be granted via Intent.FLAG_GRANT_READ_URI_PERMISSION. This lets you share specific rows/files without giving blanket access to the entire provider.'},
+{tag:'provider',tagLabel:'Provider',title:'ContentProvider.query() executes',
+desc:'The target app\'s ContentProvider receives the call. It parses the URI using a UriMatcher to determine which table/resource was requested, then queries its internal data source (SQLite, files, network) and returns a Cursor.',
+flow:['UriMatcher matches path','Query SQLite / files','Return Cursor'],highlight:2,
+detail:'The provider runs in its own app\'s process. If the provider app isn\'t running, the system starts it. The Cursor is returned across process boundaries via Binder IPC.'},
+{tag:'system',tagLabel:'System',title:'Cursor is returned across process boundary',
+desc:'The Cursor object is marshalled across the Binder IPC boundary back to the client app. The client can now iterate through rows of data. The Cursor is backed by a CursorWindow — a shared memory region for efficiency.',
+flow:['Binder IPC','CursorWindow (shared memory)','Client receives Cursor'],highlight:1,
+detail:'CursorWindow uses a shared memory buffer (typically 2MB). For large result sets, data is loaded in chunks. Always close the Cursor when done to free the shared memory.'},
+{tag:'client',tagLabel:'Client App',title:'Client app reads data from the Cursor',
+desc:'The client iterates through the Cursor using moveToFirst()/moveToNext() and extracts column values. The ContentProvider\'s process stays alive as long as the Cursor is open — always close it in a finally block or use-block.',
+flow:['cursor.moveToFirst()','cursor.getString(col)','cursor.close()'],highlight:2,
+detail:'Use ContentResolver.registerContentObserver() to watch for changes. When the provider data changes, it calls context.contentResolver.notifyChange(uri) to alert all observers.'}
+];
+const cSteps=[
+{tag:'client',tagLabel:'Insert',title:'insert() — Adding new data',
+desc:'Call contentResolver.insert(uri, contentValues) to add a new row. ContentValues is a map of column-name → value pairs. The provider validates the data, inserts it into its data store, and returns the URI of the new row.',
+flow:['contentResolver.insert()','ContentValues → Provider','Returns new row URI'],highlight:0,
+detail:'The returned URI includes the new row\'s ID: content://authority/table/42. Use ContentUris.parseId(uri) to extract the numeric ID.'},
+{tag:'client',tagLabel:'Update',title:'update() — Modifying existing data',
+desc:'Call contentResolver.update(uri, values, selection, args) to modify rows. The selection clause acts like SQL WHERE. Returns the number of rows affected. The provider enforces permissions and validates changes.',
+flow:['contentResolver.update()','WHERE clause filters rows','Returns affected count'],highlight:1,
+detail:'You can update a single row by using a URI with an ID (content://authority/table/42) or multiple rows with a selection clause.'},
+{tag:'client',tagLabel:'Delete',title:'delete() — Removing data',
+desc:'Call contentResolver.delete(uri, selection, args). Works like update() but removes matching rows. Returns the count of deleted rows. The provider handles cascading deletes and cleanup.',
+flow:['contentResolver.delete()','Selection filters target rows','Returns deleted count'],highlight:0,
+detail:'Some providers implement "soft delete" (marking rows inactive) rather than actual deletion. The Calendar provider, for instance, uses a DELETED column.'},
+{tag:'provider',tagLabel:'Batch',title:'applyBatch() — Atomic operations',
+desc:'For multiple operations that must succeed or fail together, use applyBatch(). You build an ArrayList of ContentProviderOperation objects and execute them atomically. If any operation fails, all are rolled back.',
+flow:['Build operations list','applyBatch(authority, ops)','All-or-nothing execution'],highlight:1,
+detail:'applyBatch() is essential for syncing — e.g., the Contacts provider uses it to insert a contact with multiple phone numbers and emails as a single atomic operation.'},
+{tag:'security',tagLabel:'FileProvider',title:'Sharing files securely via ContentProvider',
+desc:'FileProvider is a special ContentProvider that generates content:// URIs for your app\'s private files. Instead of exposing raw file:// paths (blocked since Android 7), you grant temporary read/write access to specific files via Intent flags.',
+flow:['FileProvider.getUriForFile()','content:// URI generated','FLAG_GRANT_READ_URI_PERMISSION'],highlight:1,
+detail:'Declare FileProvider in your manifest with file_paths.xml that specifies which directories are shareable. URIs are obfuscated — the receiving app cannot guess paths to other files.'}
+];
+
+let qCur=0,qTimer=null,cCur=0,cTimer=null;
+function buildDots(prefix,count){let h='';for(let i=0;i<count;i++)h+=`<span id="${prefix}-d-${i}" class="dot"></span>`;h+=`<span style="font-size:12px;color:var(--tt);margin-left:6px" id="${prefix}-cnt"></span>`;document.getElementById(prefix+'-dots').innerHTML=h}
+function render(prefix,steps,i){const s=steps[i],c=document.getElementById(prefix+'-card');c.innerHTML='';c.className='step-enter';void c.offsetWidth;
+const fh=s.flow.map((f,j)=>`<span class="flow-box${j===s.highlight?' hi':''}">${f}</span>${j<s.flow.length-1?'<span class="flow-arr">→</span>':''}`).join('');
+c.innerHTML=`<span class="pill ${tagCls[s.tag]}">${s.tagLabel}</span><div style="font-size:16px;font-weight:500;margin-bottom:8px">${s.title}</div><div style="font-size:14px;color:var(--ts);line-height:1.6;margin-bottom:12px">${s.desc}</div><div class="flow-row">${fh}</div><div style="margin-top:12px;border-left:2px solid var(--ci);padding-left:12px;font-size:12px;color:var(--ts);line-height:1.5">${s.detail}</div>`;
+for(let j=0;j<steps.length;j++){document.getElementById(prefix+'-d-'+j).className='dot'+(j===i?' active':j<i?' done':'')}
+document.getElementById(prefix+'-cnt').textContent=`Step ${i+1} of ${steps.length}`;
+document.getElementById(prefix+'-prev').disabled=i===0;document.getElementById(prefix+'-next').disabled=i===steps.length-1}
+
+function qMove(d){const n=Math.max(0,Math.min(qSteps.length-1,qCur+d));if(n===qCur)return;qCur=n;render('q',qSteps,qCur)}
+function qToggleAuto(){const b=document.getElementById('q-auto');if(qTimer){clearInterval(qTimer);qTimer=null;b.textContent='▶ Auto-play'}else{b.textContent='⏸ Pause';qTimer=setInterval(()=>{if(qCur<qSteps.length-1){qCur++;render('q',qSteps,qCur)}else{clearInterval(qTimer);qTimer=null;b.textContent='▶ Auto-play'}},3000)}}
+function cMove(d){const n=Math.max(0,Math.min(cSteps.length-1,cCur+d));if(n===cCur)return;cCur=n;render('c',cSteps,cCur)}
+function cToggleAuto(){const b=document.getElementById('c-auto');if(cTimer){clearInterval(cTimer);cTimer=null;b.textContent='▶ Auto-play'}else{b.textContent='⏸ Pause';cTimer=setInterval(()=>{if(cCur<cSteps.length-1){cCur++;render('c',cSteps,cCur)}else{clearInterval(cTimer);cTimer=null;b.textContent='▶ Auto-play'}},3000)}}
+function switchTab(t){document.getElementById('sec-q').style.display=t==='q'?'block':'none';document.getElementById('sec-crud').style.display=t==='crud'?'block':'none';document.getElementById('tab-q').classList.toggle('active',t==='q');document.getElementById('tab-crud').classList.toggle('active',t==='crud')}
+buildDots('q',qSteps.length);render('q',qSteps,0);buildDots('c',cSteps.length);render('c',cSteps,0);
+</script>

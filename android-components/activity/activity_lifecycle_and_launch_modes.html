@@ -1,0 +1,234 @@
+
+<h2 class="sr-only">Android Activity Lifecycle & Launch Modes — interactive walkthrough</h2>
+<style>
+:root{--cb:#e2e8f0;--ct:#cbd5e1;--ci:#94a3b8;--tp:#334155;--ts:#64748b;--tt:#94a3b8;--ti:#64748b;--tc:#10b981;--tw:#d97706;--td:#8b5cf6;--bp:#fff;--bs:#f8fafc;--bi:#f1f5f9;--bg:#ecfdf5;--bw:#fef3c7;--bd:#f5f3ff;--br:8px}
+body{font-family:'Inter',-apple-system,sans-serif;margin:0;color:var(--tp)}
+@media(prefers-reduced-motion:no-preference){.step-enter{animation:fadeSlide .35s ease forwards}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--cb);transition:background .2s,transform .2s;flex-shrink:0}
+.dot.active{background:var(--ti);transform:scale(1.3)}.dot.done{background:var(--tc)}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+.tag-lifecycle{background:var(--bi);color:var(--ti)}.tag-create{background:var(--bg);color:var(--tc)}.tag-destroy{background:var(--bw);color:var(--tw)}.tag-navigate{background:var(--bd);color:var(--td)}
+.flow-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.flow-box{font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid var(--cb);color:var(--ts);background:var(--bs)}
+.flow-box.hi{border-color:var(--ci);color:var(--ti);background:var(--bi);font-weight:500}
+.flow-arr{color:var(--tt);font-size:13px}
+.nav-btn{font-size:13px;padding:6px 18px;cursor:pointer;border-radius:6px;border:1px solid var(--cb);background:#fff;color:var(--ts);transition:all .2s}
+.nav-btn:hover:not(:disabled){background:var(--bi);border-color:var(--ci);color:var(--tp)}
+.nav-btn:disabled{opacity:.5;cursor:not-allowed}
+.tab{font-size:13px;padding:8px 20px;cursor:pointer;border-radius:6px 6px 0 0;border:1px solid var(--cb);border-bottom:none;background:var(--bs);color:var(--ts);transition:all .2s;font-weight:500}
+.tab.active{background:var(--bp);color:var(--tp);border-color:var(--ct)}
+.tab:hover:not(.active){background:var(--bi)}
+.stack-vis{display:flex;gap:6px;align-items:flex-end;margin:12px 0 4px;min-height:80px}
+.stack-item{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;text-align:center;border:1.5px solid;animation:fadeSlide .3s ease forwards}
+.stack-a{background:#dbeafe;border-color:#93c5fd;color:#1e40af}
+.stack-b{background:#fce7f3;border-color:#f9a8d4;color:#9d174d}
+.stack-label{font-size:11px;color:var(--tt);margin-bottom:4px}
+.section{padding:1rem 0}
+.mode-sel{font-size:12px;padding:4px 12px;border-radius:6px;border:1px solid var(--cb);background:var(--bs);color:var(--ts);cursor:pointer;font-weight:500}
+.mode-sel.active{background:var(--bi);border-color:var(--ci);color:var(--ti)}
+</style>
+
+<div style="padding:1rem 0">
+<!-- Tabs -->
+<div style="display:flex;gap:4px;margin-bottom:0">
+<button class="tab active" id="tab-lc" onclick="switchTab('lc')">🔄 Activity Lifecycle</button>
+<button class="tab" id="tab-lm" onclick="switchTab('lm')">🚀 Launch Modes (A→B→A)</button>
+</div>
+<div style="border:1px solid var(--ct);border-radius:0 var(--br) var(--br) var(--br);padding:1.25rem">
+
+<!-- Section: Lifecycle -->
+<div id="sec-lc" class="section">
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap" id="lc-dots"></div>
+<div id="lc-card" style="border:.5px solid var(--ct);border-radius:var(--br);padding:1.25rem 1.5rem;background:var(--bp);min-height:210px"></div>
+<div style="display:flex;gap:10px;margin-top:1rem;align-items:center">
+<button class="nav-btn" id="lc-prev" onclick="lcMove(-1)">← Prev</button>
+<button class="nav-btn" id="lc-next" onclick="lcMove(1)">Next →</button>
+<button class="nav-btn" id="lc-auto" onclick="lcToggleAuto()" style="margin-left:auto">▶ Auto-play</button>
+</div>
+</div>
+
+<!-- Section: Launch Modes -->
+<div id="sec-lm" class="section" style="display:none">
+<div style="display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap">
+<button class="mode-sel active" onclick="setMode('standard')">standard</button>
+<button class="mode-sel" onclick="setMode('singleTop')">singleTop</button>
+<button class="mode-sel" onclick="setMode('singleTask')">singleTask</button>
+<button class="mode-sel" onclick="setMode('singleInstance')">singleInstance</button>
+</div>
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap" id="lm-dots"></div>
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+<div id="lm-card" style="flex:1;min-width:280px;border:.5px solid var(--ct);border-radius:var(--br);padding:1.25rem 1.5rem;background:var(--bp);min-height:240px"></div>
+<div style="min-width:140px">
+<div class="stack-label">Back Stack</div>
+<div id="lm-stack" class="stack-vis" style="flex-direction:column-reverse"></div>
+</div>
+</div>
+<div style="display:flex;gap:10px;margin-top:1rem;align-items:center">
+<button class="nav-btn" id="lm-prev" onclick="lmMove(-1)">← Prev</button>
+<button class="nav-btn" id="lm-next" onclick="lmMove(1)">Next →</button>
+<button class="nav-btn" id="lm-auto" onclick="lmToggleAuto()" style="margin-left:auto">▶ Auto-play</button>
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+/* ── TAG MAP ── */
+const tagCls={lifecycle:'tag-lifecycle',create:'tag-create',destroy:'tag-destroy',navigate:'tag-navigate'};
+
+/* ══════════════════════════════════════
+   SECTION 1 — ACTIVITY LIFECYCLE
+   ══════════════════════════════════════ */
+const lcSteps=[
+{tag:'create',tagLabel:'Creation',title:'onCreate() — Activity is born',
+desc:'The system calls onCreate() when the Activity is first created. This is where you perform one-time setup: inflate the layout with setContentView(), initialise ViewModels, bind views, and restore saved state from the Bundle.',
+flow:['System starts Activity','onCreate(savedInstanceState)','setContentView()'],highlight:1,
+detail:'Called only once per Activity instance. If the system previously destroyed the Activity, savedInstanceState contains the data you saved in onSaveInstanceState(). Otherwise it is null.'},
+{tag:'create',tagLabel:'Creation',title:'onStart() — Becoming visible',
+desc:'The Activity is now visible to the user but not yet in the foreground. The UI is rendered but the user cannot interact with it. This is a good place to start animations or register UI-related BroadcastReceivers.',
+flow:['onCreate() done','onStart()','UI visible but not interactive'],highlight:1,
+detail:'Paired with onStop(). Every time the Activity becomes visible again (e.g. returning from another Activity), onStart() is called.'},
+{tag:'lifecycle',tagLabel:'Running',title:'onResume() — Fully interactive',
+desc:'The Activity is now in the foreground and the user can interact with it. This is the "active" state. Start the camera preview, resume playing video, or begin location updates here.',
+flow:['onStart() done','onResume()','User can interact'],highlight:1,
+detail:'Paired with onPause(). The Activity stays in the resumed state until something takes focus away — a dialog, a new Activity, or the user pressing Home.'},
+{tag:'lifecycle',tagLabel:'Running',title:'App is running — the resumed state',
+desc:'The Activity is fully visible and interactive. The user is engaging with the UI. All lifecycle-aware components are in the RESUMED state. This is where your app spends most of its time.',
+flow:['RESUMED state','User interacting','Lifecycle observers active'],highlight:0,
+detail:'If the system needs memory, it will NOT kill a resumed Activity. Only paused or stopped Activities can be reclaimed.'},
+{tag:'destroy',tagLabel:'Pausing',title:'onPause() — Losing focus',
+desc:'Called when the Activity is partially obscured — e.g. a semi-transparent dialog appears, or multi-window mode activates. Release expensive resources like camera, and pause animations. Keep it fast — the next Activity waits for onPause() to finish.',
+flow:['Focus lost','onPause()','Release heavy resources'],highlight:1,
+detail:'Do NOT save data here — use onStop() instead. onPause() must complete quickly because the new Activity cannot resume until it finishes.'},
+{tag:'destroy',tagLabel:'Stopping',title:'onStop() — No longer visible',
+desc:'The Activity is completely hidden. Another Activity covers the entire screen, or the user pressed Home. Save persistent data, release all resources not needed while invisible. The Activity instance is still in memory.',
+flow:['Fully hidden','onStop()','Save data, release resources'],highlight:1,
+detail:'Paired with onStart(). The system may kill the process after onStop() without calling onDestroy() if memory is critically low (rare on modern devices).'},
+{tag:'lifecycle',tagLabel:'Restart',title:'onRestart() → onStart() — Coming back',
+desc:'When a stopped Activity returns to the foreground, onRestart() is called before onStart(). This only happens when the Activity was stopped but NOT destroyed — e.g. the user pressed Back from Activity B to return to Activity A.',
+flow:['User returns','onRestart()','onStart()','onResume()'],highlight:0,
+detail:'onRestart() is NOT called if the Activity was destroyed. In that case, the full onCreate() → onStart() → onResume() path runs.'},
+{tag:'destroy',tagLabel:'Destruction',title:'onDestroy() — Final cleanup',
+desc:'Called when the Activity is finishing (user called finish() or pressed Back) or the system is destroying it due to a configuration change (like rotation). Release all remaining resources and unregister all receivers.',
+flow:['Activity finishing','onDestroy()','Instance garbage collected'],highlight:1,
+detail:'Check isFinishing() to distinguish user-triggered destruction from system-triggered (config change). ViewModels survive config changes but NOT finish().'},
+{tag:'lifecycle',tagLabel:'Special',title:'onSaveInstanceState() — Surviving death',
+desc:'Called before the Activity may be killed by the system. Save transient UI state (scroll position, text input) into the Bundle. This data is passed back to onCreate() and onRestoreInstanceState() when the Activity is recreated.',
+flow:['System may kill','onSaveInstanceState(Bundle)','Data preserved'],highlight:1,
+detail:'NOT called when the user explicitly closes the Activity (Back button / finish()). Only called when the system might destroy and later recreate the Activity.'}
+];
+
+let lcCur=0,lcTimer=null;
+function lcDots(){let h='';for(let i=0;i<lcSteps.length;i++)h+=`<span id="lc-d-${i}" class="dot"></span>`;h+=`<span style="font-size:12px;color:var(--tt);margin-left:6px" id="lc-cnt"></span>`;document.getElementById('lc-dots').innerHTML=h}
+function lcRender(i){const s=lcSteps[i],c=document.getElementById('lc-card');c.innerHTML='';c.className='step-enter';void c.offsetWidth;
+const fh=s.flow.map((f,j)=>`<span class="flow-box${j===s.highlight?' hi':''}">${f}</span>${j<s.flow.length-1?'<span class="flow-arr">→</span>':''}`).join('');
+c.innerHTML=`<span class="pill ${tagCls[s.tag]}">${s.tagLabel}</span><div style="font-size:16px;font-weight:500;margin-bottom:8px">${s.title}</div><div style="font-size:14px;color:var(--ts);line-height:1.6;margin-bottom:12px">${s.desc}</div><div class="flow-row">${fh}</div><div style="margin-top:12px;border-left:2px solid var(--ci);padding-left:12px;font-size:12px;color:var(--ts);line-height:1.5">${s.detail}</div>`;
+for(let j=0;j<lcSteps.length;j++){document.getElementById('lc-d-'+j).className='dot'+(j===i?' active':j<i?' done':'')}
+document.getElementById('lc-cnt').textContent=`Step ${i+1} of ${lcSteps.length}`;
+document.getElementById('lc-prev').disabled=i===0;document.getElementById('lc-next').disabled=i===lcSteps.length-1}
+function lcMove(d){const n=Math.max(0,Math.min(lcSteps.length-1,lcCur+d));if(n===lcCur)return;lcCur=n;lcRender(lcCur)}
+function lcToggleAuto(){const b=document.getElementById('lc-auto');if(lcTimer){clearInterval(lcTimer);lcTimer=null;b.textContent='▶ Auto-play'}else{b.textContent='⏸ Pause';lcTimer=setInterval(()=>{if(lcCur<lcSteps.length-1){lcCur++;lcRender(lcCur)}else{clearInterval(lcTimer);lcTimer=null;b.textContent='▶ Auto-play'}},3000)}}
+
+/* ══════════════════════════════════════
+   SECTION 2 — LAUNCH MODES (A → B → A)
+   ══════════════════════════════════════ */
+const modes={
+standard:[
+{tag:'create',tagLabel:'Start',title:'Activity A is launched (standard)',
+desc:'User opens the app. Activity A is created with the standard launch mode — a new instance is pushed onto the task\'s back stack. There is no reuse logic; every launch creates a new instance.',
+flow:['startActivity(A)','new A instance','Push to stack'],highlight:1,stack:['A'],
+detail:'Standard is the default launch mode. The system always creates a new instance of the Activity in the target task.'},
+{tag:'navigate',tagLabel:'Navigate',title:'A starts Activity B (standard)',
+desc:'Activity A calls startActivity(Intent) targeting Activity B. A new instance of B is created and pushed on top of A in the same task. Activity A moves to onPause() → onStop().',
+flow:['A: onPause()','B: onCreate()','B: onResume()','A: onStop()'],highlight:1,stack:['A','B'],
+detail:'A\'s onPause() completes BEFORE B\'s onCreate() begins. A\'s onStop() is called after B is fully visible.'},
+{tag:'navigate',tagLabel:'Navigate',title:'B starts Activity A again (standard)',
+desc:'Activity B now starts Activity A. With standard mode, a SECOND instance of A is created and pushed on top of B. The original A is still in the stack. You now have: A₁ → B → A₂.',
+flow:['B: onPause()','new A₂: onCreate()','A₂: onResume()','B: onStop()'],highlight:1,stack:['A₁','B','A₂'],
+detail:'Standard mode does NOT reuse existing instances. Pressing Back from A₂ will go to B, then to A₁. Each instance is independent with its own state.'},
+{tag:'lifecycle',tagLabel:'Result',title:'Final state — three instances in stack',
+desc:'The back stack now contains three Activity instances: A₁ (bottom), B (middle), A₂ (top). Each is a separate object with its own lifecycle and saved state. Back presses pop them one at a time.',
+flow:['A₁ (stopped)','B (stopped)','A₂ (resumed)'],highlight:2,stack:['A₁','B','A₂'],
+detail:'This can lead to multiple copies of the same Activity in memory. For most cases this is fine, but for login or main screens, you may want singleTop or singleTask.'}
+],
+singleTop:[
+{tag:'create',tagLabel:'Start',title:'Activity A is launched (singleTop)',
+desc:'User opens the app. Activity A is created. With singleTop, the system creates a new instance if A is NOT already at the top of the stack. Since the stack is empty, a new A is created normally.',
+flow:['startActivity(A)','Stack empty → new instance','Push A to stack'],highlight:1,stack:['A'],
+detail:'singleTop only prevents duplicates at the TOP of the stack. If A is deeper in the stack, a new instance is still created.'},
+{tag:'navigate',tagLabel:'Navigate',title:'A starts Activity B (singleTop)',
+desc:'Activity A starts Activity B. B is not at the top (A is), so a new B instance is created and pushed on top. Same behavior as standard mode for this step.',
+flow:['A: onPause()','B: onCreate()','B: onResume()','A: onStop()'],highlight:1,stack:['A','B'],
+detail:'singleTop has no effect here because B is being launched fresh. The mode only matters when the Activity being launched is already at the top.'},
+{tag:'navigate',tagLabel:'Navigate',title:'B starts Activity A (singleTop)',
+desc:'B starts Activity A. A is NOT at the top of the stack (B is), so a NEW instance of A is created. singleTop only reuses an Activity if it\'s already at the top. Result: A₁ → B → A₂.',
+flow:['A not at top','new A₂: onCreate()','A₂: onResume()'],highlight:0,stack:['A₁','B','A₂'],
+detail:'If B had launched ITSELF (B), then singleTop would reuse the existing B and call onNewIntent() instead of onCreate(). But since the target (A) is not at the top, a new instance is created.'},
+{tag:'lifecycle',tagLabel:'Alternative',title:'What if A launched A again? (singleTop reuse)',
+desc:'If A (at the top) tried to launch itself, singleTop would NOT create a new instance. Instead, the existing A receives onNewIntent() with the new Intent data. The stack stays as [A].',
+flow:['A at top already','onPause()','onNewIntent(intent)','onResume()'],highlight:2,stack:['A','(reused!)'],
+detail:'onNewIntent() delivers the new Intent. Call setIntent(intent) inside onNewIntent() if you want getIntent() to return the updated intent. This avoids duplicate Activities.'}
+],
+singleTask:[
+{tag:'create',tagLabel:'Start',title:'Activity A is launched (singleTask)',
+desc:'Activity A is created in its own task (or the root of an existing affinity-matching task). Only ONE instance of A can exist across all tasks. If A already exists, the system brings its task to the foreground.',
+flow:['startActivity(A)','Check: A exists?','No → create new A'],highlight:2,stack:['A'],
+detail:'singleTask Activities are always the root of their task (unless taskAffinity is used). There can only be one instance system-wide.'},
+{tag:'navigate',tagLabel:'Navigate',title:'A starts Activity B (singleTask)',
+desc:'Activity A starts B. B is created normally and pushed on top of A in the same task. A moves to stopped state. This step is identical to standard mode.',
+flow:['A: onPause()','B: onCreate()','B: onResume()','A: onStop()'],highlight:1,stack:['A','B'],
+detail:'singleTask only affects the launch behavior of A itself. When A launches other activities, they follow their own launch mode rules.'},
+{tag:'navigate',tagLabel:'Navigate',title:'B starts Activity A (singleTask) — stack cleared!',
+desc:'B starts Activity A. Since A is singleTask, the system finds the existing A instance, brings it to the front, and DESTROYS everything above it (B is popped and destroyed). A receives onNewIntent().',
+flow:['Find existing A','Destroy B above A','A: onNewIntent()','A: onResume()'],highlight:1,stack:['A'],
+detail:'This is the key difference: singleTask clears the stack above the existing instance. B\'s onDestroy() is called. A gets onNewIntent() → onRestart() → onStart() → onResume().'},
+{tag:'lifecycle',tagLabel:'Result',title:'Final state — only A remains',
+desc:'The back stack is cleared to just Activity A. B was destroyed. A received the new Intent through onNewIntent(). This ensures A is always the single entry point and prevents deep stacking.',
+flow:['B destroyed','A: onNewIntent()','Stack: [A] only'],highlight:2,stack:['A'],
+detail:'Use singleTask for Activities that should act as a hub — like a home screen or dashboard. Combined with FLAG_ACTIVITY_CLEAR_TOP, this is a common "return to home" pattern.'}
+],
+singleInstance:[
+{tag:'create',tagLabel:'Start',title:'Activity A is launched (singleInstance)',
+desc:'Activity A is created in its OWN dedicated task. This task can NEVER hold any other Activity. A is the sole occupant. Only one instance of A can exist in the entire system.',
+flow:['startActivity(A)','Create exclusive task','A alone in Task 1'],highlight:2,stack:['A (Task 1)'],
+detail:'singleInstance is the most restrictive mode. The Activity gets an exclusive task. Any Activities launched from A go into a DIFFERENT task.'},
+{tag:'navigate',tagLabel:'Navigate',title:'A starts Activity B — different task!',
+desc:'Activity A starts B. Since A\'s task cannot hold other Activities, B is created in a SEPARATE task (Task 2). The system switches to Task 2. A remains alone in Task 1 (stopped).',
+flow:['A in Task 1','B created in Task 2','Task switch','A: onStop()'],highlight:1,stack:['A (T1)','B (T2)'],
+detail:'The user sees B, which is in Task 2. If they press the Recents button, they\'ll see two separate task cards — one for A and one for B.'},
+{tag:'navigate',tagLabel:'Navigate',title:'B starts Activity A (singleInstance)',
+desc:'B starts A. The system finds the existing A instance in Task 1, brings Task 1 to the foreground, and delivers onNewIntent() to A. B remains in Task 2 (stopped). No new A instance is created.',
+flow:['Find A in Task 1','Bring Task 1 forward','A: onNewIntent()','B: onStop() in Task 2'],highlight:1,stack:['A (T1, front)','B (T2, behind)'],
+detail:'Back button from A may go to the launcher (not B!) because A\'s task has no other Activities. The tasks are independent.'},
+{tag:'lifecycle',tagLabel:'Result',title:'Final state — two separate tasks',
+desc:'A is in Task 1 (foreground, resumed), B is in Task 2 (background, stopped). They are in completely separate tasks. Navigation between them is like switching apps.',
+flow:['Task 1: [A] (front)','Task 2: [B] (back)','Independent tasks'],highlight:0,stack:['A (T1)','B (T2)'],
+detail:'singleInstance is rare in practice. Use it for Activities that must be completely isolated — like a system-wide picker, a floating video player, or a lock screen.'}
+]
+};
+
+let curMode='standard',lmCur=0,lmTimer=null;
+function setMode(m){curMode=m;lmCur=0;if(lmTimer){clearInterval(lmTimer);lmTimer=null;document.getElementById('lm-auto').textContent='▶ Auto-play'}
+document.querySelectorAll('.mode-sel').forEach(b=>{b.classList.toggle('active',b.textContent===m)});lmBuildDots();lmRender(0)}
+function lmBuildDots(){const s=modes[curMode];let h='';for(let i=0;i<s.length;i++)h+=`<span id="lm-d-${i}" class="dot"></span>`;h+=`<span style="font-size:12px;color:var(--tt);margin-left:6px" id="lm-cnt"></span>`;document.getElementById('lm-dots').innerHTML=h}
+function lmRender(i){const s=modes[curMode][i],c=document.getElementById('lm-card');c.innerHTML='';c.className='step-enter';void c.offsetWidth;
+const fh=s.flow.map((f,j)=>`<span class="flow-box${j===s.highlight?' hi':''}">${f}</span>${j<s.flow.length-1?'<span class="flow-arr">→</span>':''}`).join('');
+c.innerHTML=`<span class="pill ${tagCls[s.tag]}">${s.tagLabel}</span><div style="font-size:16px;font-weight:500;margin-bottom:8px">${s.title}</div><div style="font-size:14px;color:var(--ts);line-height:1.6;margin-bottom:12px">${s.desc}</div><div class="flow-row">${fh}</div><div style="margin-top:12px;border-left:2px solid var(--ci);padding-left:12px;font-size:12px;color:var(--ts);line-height:1.5">${s.detail}</div>`;
+// Stack visual
+const sk=document.getElementById('lm-stack');sk.innerHTML='';
+s.stack.forEach(item=>{const d=document.createElement('div');d.className='stack-item '+(item.startsWith('B')||item.includes('B')?'stack-b':'stack-a');d.textContent=item;sk.appendChild(d)});
+// Dots
+const all=modes[curMode];for(let j=0;j<all.length;j++){document.getElementById('lm-d-'+j).className='dot'+(j===i?' active':j<i?' done':'')}
+document.getElementById('lm-cnt').textContent=`Step ${i+1} of ${all.length}`;
+document.getElementById('lm-prev').disabled=i===0;document.getElementById('lm-next').disabled=i===all.length-1}
+function lmMove(d){const all=modes[curMode];const n=Math.max(0,Math.min(all.length-1,lmCur+d));if(n===lmCur)return;lmCur=n;lmRender(lmCur)}
+function lmToggleAuto(){const b=document.getElementById('lm-auto');if(lmTimer){clearInterval(lmTimer);lmTimer=null;b.textContent='▶ Auto-play'}else{b.textContent='⏸ Pause';lmTimer=setInterval(()=>{const all=modes[curMode];if(lmCur<all.length-1){lmCur++;lmRender(lmCur)}else{clearInterval(lmTimer);lmTimer=null;b.textContent='▶ Auto-play'}},3000)}}
+
+/* ── TAB SWITCH ── */
+function switchTab(t){document.getElementById('sec-lc').style.display=t==='lc'?'block':'none';document.getElementById('sec-lm').style.display=t==='lm'?'block':'none';document.getElementById('tab-lc').classList.toggle('active',t==='lc');document.getElementById('tab-lm').classList.toggle('active',t==='lm')}
+
+/* ── INIT ── */
+lcDots();lcRender(0);lmBuildDots();lmRender(0);
+</script>

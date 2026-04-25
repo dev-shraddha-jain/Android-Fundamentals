@@ -3,14 +3,11 @@
 ![Android Architecture Hierarchy](android-arch.png)
 
 
-
 ### 1. Linux Kernel (Core Isolation Layer)
-
 
 - This is the base of everything. 
 - Modified version of Linux, tailored for mobile hardware
 - This is not just “drivers”—it’s the **security + process isolation backbone**.
-
 
 **Key responsibilities:**
 
@@ -27,7 +24,6 @@
 ### 2. HAL (Hardware Abstraction Layer)
 
 - Acts as a **contract layer** between hardware vendors and Android framework.
-
 - Instead of every app needing to know the specific details of your phone's camera hardware, they just ask the Camera HAL, which handles the specifics. 
 This is how Android can run on thousands of different devices — swap out the HAL for a different phone's hardware, and everything above stays the same.
 
@@ -43,10 +39,8 @@ Camera API → CameraService → HAL → Vendor driver
 ### 3. Android Runtime (ART) + Native Libraries(the engine room)
 
 - This layer has two side-by-side parts. 
-
 - The **Android Runtime (ART)** is what actually runs your apps 
    - it takes the compiled app code (in a format called DEX) and executes it.
-
 - The **Native C/C++ Libraries** are pre-built, 
    - highly optimized tools for things like rendering graphics (OpenGL), 
    - playing media, storing data (SQLite), and 
@@ -58,11 +52,12 @@ Camera API → CameraService → HAL → Vendor driver
 
 #### Native Libraries (C/C++)
 
-* libc, SSL, SQLite, OpenGL, Web rendering
-
+```
+libc, SSL, SQLite, OpenGL, Web rendering
+```
 **Interview trap:**
 
-* JNI misuse → major **security + performance risk**
+JNI misuse → major **security + performance risk**
 
 
 ### 4. Java API Framework (System Services Layer)
@@ -78,18 +73,17 @@ Camera API → CameraService → HAL → Vendor driver
 
 **Key concept:**
 
-* Apps NEVER talk to services directly
-* Everything goes through **Binder IPC**
+- Apps NEVER talk to services directly
+- Everything goes through **Binder IPC**
 
 ### 5. System Apps / User Apps Layer
 
-* Pre-installed apps + third-party apps
-* Run in **sandboxed processes**
-* Communicate via:
-
-  * Intents
-  * Binder
-  * Content Providers
+- Pre-installed apps + third-party apps
+- Run in **sandboxed processes**
+- Communicate via:
+  - Intents
+  - Binder
+  - Content Providers
 
 
 # 🔍 Deep Process Flow (App Launch Internals)
@@ -99,18 +93,16 @@ Camera API → CameraService → HAL → Vendor driver
 
 
 
-Here's a quick summary of all 8 steps in bullet form:
+Here's a quick summary of all 8 steps:
 
-```
-Step 1 — Tap: Launcher detects touch, creates an Intent with the app's package name, sends it to the system
-Step 2 — AMS: ActivityManagerService receives the Intent, checks if an app process already exists — it doesn't (cold start)
-Step 3 — Zygote fork: AMS tells Zygote to fork() — a pre-warmed copy of ART is instantly cloned as the new app process
-Step 4 — ART init: Android Runtime loads the app's DEX bytecode and compiles it (JIT/AOT) inside the new process
-Step 5 — Application.onCreate(): First app code runs — global SDKs, crash reporters, DI containers initialise
-Step 6 — Activity.onCreate(): Your screen's Activity starts — layout is declared via setContentView(), ViewModels wired up
-Step 7 — View inflation: XML layout is parsed, every View object created, then measure → layout → draw passes render the frame
-Step 8 — SurfaceFlinger: The frame is composited with the status bar and nav bar, then pushed to the display — you see the app
-```
+1. **Step 1 — Tap**: Launcher detects touch, creates an Intent with the app's package name, sends it to the system.
+2. **Step 2 — AMS**: ActivityManagerService receives the Intent, checks if an app process already exists — it doesn't (cold start).
+3. **Step 3 — Zygote fork**: AMS tells Zygote to fork() — a pre-warmed copy of ART is instantly cloned as the new app process.
+4. **Step 4 — ART init**: Android Runtime loads the app's DEX bytecode and compiles it (JIT/AOT) inside the new process.
+5. **Step 5 — Application.onCreate()**: First app code runs — global SDKs, crash reporters, DI containers initialise.
+6. **Step 6 — Activity.onCreate()**: Your screen's Activity starts — layout is declared via setContentView(), ViewModels wired up.
+7. **Step 7 — View inflation**: XML layout is parsed, every View object created, then measure → layout → draw passes render the frame.
+8. **Step 8 — SurfaceFlinger**: The frame is composited with the status bar and nav bar, then pushed to the display.
 
 
 
