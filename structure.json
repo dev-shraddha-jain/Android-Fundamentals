@@ -11,7 +11,7 @@
     "is_root": true
   },
   {
-    "name": "android-architecture",
+    "name": "Android Architecture",
     "path": "android-architecture",
     "files": [
       {
@@ -40,6 +40,10 @@
       {
         "name": "BroadcastReceiver.md",
         "path": "android-components/receiver/BroadcastReceiver.md"
+      },
+      {
+        "name": "Injecting js in Android Webview",
+        "path": "android-components/activity/WebView.md"
       }
     ],
     "is_root": false
@@ -76,7 +80,7 @@
     "is_root": false
   },
   {
-    "name": "android-jetpack",
+    "name": "Android Jetpack",
     "path": "android-jetpack",
     "files": [
       {
@@ -97,6 +101,10 @@
       {
         "name": "Permissions.md",
         "path": "android-manifest/permissions/Permissions.md"
+      },
+      {
+        "name": "Resource Analysis",
+        "path": "android-manifest/resources/Resources.md"
       }
     ],
     "is_root": false
@@ -139,34 +147,39 @@
     "is_root": false
   },
   {
-    "name": "WebView",
-    "path": "",
+    "name": "Programming Languages",
+    "path": "programming-languages",
     "files": [
       {
-        "name": "Injecting js in Android Webview",
-        "path": "WebView.md"
+        "name": "Kotlin & Java Concepts",
+        "path": "programming-languages/KotlinJavaConcepts.md"
+      },
+      {
+        "name": "JNI (Native Interface)",
+        "path": "programming-languages/JNI.md"
       }
     ],
     "is_root": false
   },
   {
     "name": "Android Storage Methods",
-    "path": "",
+    "path": "storage-deep-dive",
     "files": [
       {
-        "name": "Storage",
-        "path": "Storage.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "C, C++ & JNI",
-    "path": "",
-    "files": [
+        "name": "Storage Overview",
+        "path": "storage-deep-dive/Storage.md"
+      },
       {
-        "name": "JNI",
-        "path": "JNI.md"
+        "name": "SQLite & Room",
+        "path": "storage-deep-dive/SQLite.md"
+      },
+      {
+        "name": "Firebase Cloud Storage",
+        "path": "storage-deep-dive/Firebase.md"
+      },
+      {
+        "name": "File Handling & Scoped Storage",
+        "path": "storage-deep-dive/FileHandling.md"
       }
     ],
     "is_root": false
@@ -178,17 +191,6 @@
       {
         "name": "App Structure (APK vs AAB)",
         "path": "app-structure/AppStructure.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "Programming Languages",
-    "path": "programming-languages",
-    "files": [
-      {
-        "name": "Kotlin & Java Concepts",
-        "path": "programming-languages/KotlinJavaConcepts.md"
       }
     ],
     "is_root": false

@@ -7,9 +7,18 @@ Android provides several ways to save persistent data.
 | Option | Best For |
 | :--- | :--- |
 | **Shared Preferences** | Small settings (Key-Value) |
+| **DataStore** | Modern, Type-safe settings (Proto/Preferences) |
 | **Internal Storage** | Private app files |
 | **External Storage** | Shared media (Photos) |
 | **Room Database** | Structured, searchable data |
+
+---
+
+## 📂 Deep Dives
+For advanced implementation and senior-level concepts, see the dedicated guides:
+*   [**SQLite & Room Deep Dive**](SQLite.md)
+*   [**Firebase Cloud Storage**](Firebase.md)
+*   [**File Handling & Scoped Storage**](FileHandling.md)
 
 ## 🔗 Real-World Process: Scoped Storage
 
