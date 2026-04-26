@@ -170,5 +170,16 @@
       }
     ],
     "is_root": false
+  },
+  {
+    "name": "Build & App Structure",
+    "path": "app-structure",
+    "files": [
+      {
+        "name": "App Structure (APK vs AAB)",
+        "path": "app-structure/AppStructure.md"
+      }
+    ],
+    "is_root": false
   }
 ]

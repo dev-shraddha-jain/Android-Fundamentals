@@ -34,7 +34,22 @@ The `AndroidManifest.xml` file is the blueprint of your application.
   [ App is Ready to Launch ]
 ```
 
+## 🔐 Security: Exported Components
+The `android:exported` attribute determines whether a component (Activity, Service, Receiver) can be started by other applications.
+
+*   **`android:exported="true"`**: Any app can launch this component.
+*   **`android:exported="false"`**: Only your app or apps with the same User ID can launch it.
+
+> **Note:** Since Android 12, if a component has an `<intent-filter>`, you MUST explicitly set `android:exported`.
+
 ## 🎯 Interview-Ready Answer
+
+**Q: What is the risk of setting exported="true" for a Service?**
+
+**Answer:**
+> It makes the service public. If the service doesn't perform its own permission checks, any malicious app on the device could start or bind to it, potentially leaking data or executing privileged actions. This is a common entry point for "Intent Redirection" attacks.
+
+---
 
 **Q: What happens if you forget to declare an Activity in the Manifest?**
 

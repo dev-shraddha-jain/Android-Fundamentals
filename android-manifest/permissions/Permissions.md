@@ -8,6 +8,7 @@ The mechanism that protects user privacy by restricting access to sensitive data
 1.  **Normal:** Automatically granted (e.g., Internet).
 2.  **Dangerous:** Requires user approval at runtime (e.g., Camera).
 3.  **Signature:** Granted only if apps share the same certificate.
+4.  **Special:** Requires explicit user authorization in system settings (e.g., Draw over other apps).
 
 ## 🔍 Real-World Process: Runtime Request
 
@@ -30,6 +31,13 @@ The mechanism that protects user privacy by restricting access to sensitive data
 ```
 
 ## 🎯 Interview-Ready Answer
+
+**Q: What is a "Special" permission?**
+
+**Answer:**
+> These are permissions that cover particularly sensitive actions, like `SYSTEM_ALERT_WINDOW` or `WRITE_SETTINGS`. They cannot be granted via a simple popup; the app must send the user to a specific page in the system Settings to manually toggle the permission.
+
+---
 
 **Q: What is a "Signature" permission?**
 
