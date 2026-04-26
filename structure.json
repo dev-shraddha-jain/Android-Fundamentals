@@ -11,184 +11,90 @@
     "is_root": true
   },
   {
-    "name": "Android Architecture",
-    "path": "android-architecture",
+    "name": "1. System Architecture & Structure",
+    "path": "",
     "files": [
       {
-        "name": "Architecture.md",
+        "name": "Platform Architecture",
         "path": "android-architecture/Architecture.md"
       },
       {
-        "name": "Interview QnA",
+        "name": "Build & App Structure",
+        "path": "app-structure/AppStructure.md"
+      },
+      {
+        "name": "Android Manifest",
+        "path": "android-manifest/Manifest.md"
+      },
+      {
+        "name": "Interview QnA (Architecture)",
         "path": "android-architecture/Interview.md"
+      },
+      {
+        "name": "Interview QnA (Structure)",
+        "path": "app-structure/Interview.md"
       }
     ],
     "is_root": false
   },
   {
-    "name": "App Components",
-    "path": "android-components/activity",
+    "name": "2. The Big Four (App Components)",
+    "path": "",
     "files": [
       {
-        "name": "Activity.md",
+        "name": "Activity",
         "path": "android-components/activity/Activity.md"
       },
       {
-        "name": "Interview QnA",
-        "path": "android-components/activity/interview.md"
+        "name": "Intents",
+        "path": "intents/Intents.md"
       },
       {
-        "name": "ContentProvider.md",
-        "path": "android-components/content-provider/ContentProvider.md"
-      },
-      {
-        "name": "BroadcastReceiver.md",
-        "path": "android-components/receiver/BroadcastReceiver.md"
-      },
-      {
-        "name": "Injecting js in Android Webview",
-        "path": "android-components/activity/WebView.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "Service/WorkManager",
-    "path": "android-components/service",
-    "files": [
-      {
-        "name": "Service.md",
+        "name": "Services",
         "path": "android-components/service/a-service/Service.md"
       },
       {
-        "name": "security-risks.md",
-        "path": "android-components/service/a-service/security-risks.md"
+        "name": "Broadcast Receivers",
+        "path": "android-components/receiver/BroadcastReceiver.md"
       },
       {
-        "name": "Interview QnA",
-        "path": "android-components/service/a-service/interview.md"
+        "name": "Content Providers",
+        "path": "android-components/content-provider/ContentProvider.md"
+      },
+       {
+        "name": "WorkManager",
+        "path": "android-components/service/workmanger/workmanager.md"
       },
       {
         "name": "App Witout An Activity ?",
         "path": "android-components/service/serviceApp.md"
       },
       {
-        "name": "workmanager.md",
-        "path": "android-components/service/workmanger/workmanager.md"
+        "name": "Interview QnA (Components)",
+        "path": "android-components/activity/interview.md"
       },
       {
-        "name": "service-workmanager-jobscheduler.md",
-        "path": "android-components/service/service-workmanager-jobscheduler.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "Android Jetpack",
-    "path": "android-jetpack",
-    "files": [
-      {
-        "name": "DependencyInjection.md",
-        "path": "android-jetpack/DependencyInjection.md"
-      },
-      {
-        "name": "Interview QnA",
-        "path": "android-jetpack/Interview.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "Android Manifest & Permissions",
-    "path": "android-manifest",
-    "files": [
-      {
-        "name": "Manifest.md",
-        "path": "android-manifest/Manifest.md"
-      },
-      {
-        "name": "Permissions.md",
-        "path": "android-manifest/permissions/Permissions.md"
-      },
-      {
-        "name": "Resource Analysis",
-        "path": "android-manifest/resources/Resources.md"
-      },
-      {
-        "name": "Interview QnA",
-        "path": "android-manifest/Interview.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "Android App Performance",
-    "path": "android-performance",
-    "files": [
-      {
-        "name": "MemoryManagement.md",
-        "path": "android-performance/MemoryManagement.md"
-      },
-      {
-        "name": "UIRendering.md",
-        "path": "android-performance/UIRendering.md"
-      },
-      {
-        "name": "Interview QnA",
-        "path": "android-performance/Interview.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "Android Intents",
-    "path": "intents",
-    "files": [
-      {
-        "name": "Intents.md",
-        "path": "intents/Intents.md"
-      },
-      {
-        "name": "Interview QnA",
+        "name": "Interview QnA (Intents)",
         "path": "intents/Interview.md"
       }
     ],
     "is_root": false
   },
   {
-    "name": "ProGuard/R8",
-    "path": "obfuscate",
-    "files": [
-      {
-        "name": "ProguardR8.md",
-        "path": "obfuscate/ProguardR8.md"
-      },
-      {
-        "name": "Interview QnA",
-        "path": "obfuscate/Interview.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "Programming Languages",
+    "name": "3. Programming Languages",
     "path": "programming-languages",
     "files": [
       {
-        "name": "Java Concepts (Beg to Adv)",
+        "name": "Java Concepts",
         "path": "programming-languages/JavaConcepts.md"
       },
       {
-        "name": "Kotlin Concepts (Beg to Adv)",
+        "name": "Kotlin Concepts",
         "path": "programming-languages/KotlinConcepts.md"
       },
       {
-        "name": "Java & Kotlin Interoperability",
+        "name": "Interoperability",
         "path": "programming-languages/Interoperability.md"
-      },
-      {
-        "name": "JNI (Native Interface)",
-        "path": "programming-languages/JNI.md"
       },
       {
         "name": "Interview QnA",
@@ -198,43 +104,74 @@
     "is_root": false
   },
   {
-    "name": "Android Storage Methods",
-    "path": "storage-deep-dive",
+    "name": "4. Storage & Permissions",
+    "path": "",
     "files": [
       {
-        "name": "Storage Overview",
+        "name": "Storage Methods",
         "path": "storage-deep-dive/Storage.md"
       },
       {
-        "name": "SQLite & Room",
-        "path": "storage-deep-dive/SQLite.md"
+        "name": "Permissions Deep-Dive",
+        "path": "android-manifest/permissions/Permissions.md"
       },
       {
-        "name": "Firebase Cloud Storage",
-        "path": "storage-deep-dive/Firebase.md"
-      },
-      {
-        "name": "File Handling & Scoped Storage",
-        "path": "storage-deep-dive/FileHandling.md"
-      },
-      {
-        "name": "Interview QnA",
+        "name": "Interview QnA (Storage)",
         "path": "storage-deep-dive/Interview.md"
+      },
+      {
+        "name": "Interview QnA (Permissions)",
+        "path": "android-manifest/Interview.md"
       }
     ],
     "is_root": false
   },
   {
-    "name": "Build & App Structure",
-    "path": "app-structure",
+    "name": "5. Performance & Security",
+    "path": "",
     "files": [
       {
-        "name": "App Structure (APK vs AAB)",
-        "path": "app-structure/AppStructure.md"
+        "name": "Memory Management",
+        "path": "android-performance/MemoryManagement.md"
+      },
+      {
+        "name": "UI Rendering",
+        "path": "android-performance/UIRendering.md"
+      },
+      {
+        "name": "JNI & NDK",
+        "path": "programming-languages/JNI.md"
+      },
+      {
+        "name": "Code Obfuscation",
+        "path": "obfuscate/ProguardR8.md"
+      },
+      {
+        "name": "WebView Security",
+        "path": "android-components/activity/WebView.md"
+      },
+      {
+        "name": "Interview QnA (Performance)",
+        "path": "android-performance/Interview.md"
+      },
+      {
+        "name": "Interview QnA (Obfuscation)",
+        "path": "obfuscate/Interview.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "6. Architectural Patterns",
+    "path": "android-jetpack",
+    "files": [
+      {
+        "name": "Dependency Injection",
+        "path": "android-jetpack/DependencyInjection.md"
       },
       {
         "name": "Interview QnA",
-        "path": "app-structure/Interview.md"
+        "path": "android-jetpack/Interview.md"
       }
     ],
     "is_root": false
