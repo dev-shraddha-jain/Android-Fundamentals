@@ -28,12 +28,27 @@ webView.addJavascriptInterface(WebInterface(this), "AndroidBridge")
   [ Native Kotlin Method ]
 ```
 
-## 🔐 Security Perspective
-> **CRITICAL:** Only use `addJavascriptInterface` if you control the content of the web page. A malicious site could use this bridge to execute code on the user's device.
+## 🔐 Security Perspective & How to Fix
+The main risk is **Cross-Site Scripting (XSS)**. If an attacker can inject JS into your WebView, they can use the `addJavascriptInterface` to execute native code.
+
+### 🛡️ How to Fix:
+1.  **Validate URL Origin**: Before adding the interface, check if the URL starts with your trusted domain.
+    ```kotlin
+    if (url.startsWith("https://trusted.com")) {
+        webView.addJavascriptInterface(myBridge, "AndroidBridge")
+    }
+    ```
+2.  **Disable File Access**: Unless required, disable access to the local file system.
+    ```kotlin
+    webView.settings.allowFileAccess = false
+    webView.settings.allowContentAccess = false
+    ```
+3.  **Use `WebViewAssetLoader`**: Instead of enabling `allowFileAccess`, use this Jetpack library to load local assets via a virtual HTTPS domain (e.g., `https://appassets.androidplatform.net/`).
+4.  **Enforce HTTPS**: Never load `http://` content. Use a `WebViewClient` to block non-secure traffic.
 
 ## 🎯 Interview-Ready Answer
 
-**Q: What is the risk of addJavascriptInterface?**
+**Q: How do you secure a WebView that uses JavascriptInterface?**
 
 **Answer:**
-> It creates a bridge between the JS environment (untrusted) and the Native environment (trusted). If a malicious script is injected into the web page, it can call native methods and potentially steal user data or perform unauthorized actions.
+> First, ensure the interface is only added for trusted domains. Second, use the `@JavascriptInterface` annotation (required since API 17) to expose only specific methods. Third, use `WebViewAssetLoader` to serve local content securely. Finally, always intercept URL loading in `shouldOverrideUrlLoading` to prevent the user from navigating to malicious third-party sites while the bridge is active.

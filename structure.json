@@ -181,5 +181,24 @@
       }
     ],
     "is_root": false
+  },
+  {
+    "name": "Programming Languages",
+    "path": "programming-languages",
+    "files": [
+      {
+        "name": "Java Concepts (Beg to Adv)",
+        "path": "programming-languages/JavaConcepts.md"
+      },
+      {
+        "name": "Kotlin Concepts (Beg to Adv)",
+        "path": "programming-languages/KotlinConcepts.md"
+      },
+      {
+        "name": "Java & Kotlin Interoperability",
+        "path": "programming-languages/Interoperability.md"
+      }
+    ],
+    "is_root": false
   }
 ]
