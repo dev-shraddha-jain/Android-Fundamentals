@@ -4,14 +4,22 @@
     "path": "",
     "files": [
       {
-        "name": "What's in the Book",
+        "name": "README.md",
         "path": "README.md"
+      },
+      {
+        "name": "answer.md",
+        "path": "answer.md"
+      },
+      {
+        "name": "MARKDOWN_STYLE_GUIDE.md",
+        "path": "MARKDOWN_STYLE_GUIDE.md"
       }
     ],
     "is_root": true
   },
   {
-    "name": "Android Architecture",
+    "name": "android-architecture",
     "path": "android-architecture",
     "files": [
       {
@@ -22,65 +30,93 @@
     "is_root": false
   },
   {
-    "name": "App Components",
+    "name": "activity",
     "path": "android-components/activity",
     "files": [
       {
-        "name": "Activity.md",
-        "path": "android-components/activity/Activity.md"
+        "name": "WebView.md",
+        "path": "android-components/activity/WebView.md"
       },
       {
-        "name": "Interview QnA",
+        "name": "interview.md",
         "path": "android-components/activity/interview.md"
       },
       {
-        "name": "ContentProvider.md",
-        "path": "android-components/content-provider/ContentProvider.md"
-      },
-      {
-        "name": "BroadcastReceiver.md",
-        "path": "android-components/receiver/BroadcastReceiver.md"
-      },
-      {
-        "name": "Injecting js in Android Webview",
-        "path": "android-components/activity/WebView.md"
+        "name": "Activity.md",
+        "path": "android-components/activity/Activity.md"
       }
     ],
     "is_root": false
   },
   {
-    "name": "Service/WorkManager",
+    "name": "content-provider",
+    "path": "android-components/content-provider",
+    "files": [
+      {
+        "name": "ContentProvider.md",
+        "path": "android-components/content-provider/ContentProvider.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "receiver",
+    "path": "android-components/receiver",
+    "files": [
+      {
+        "name": "BroadcastReceiver.md",
+        "path": "android-components/receiver/BroadcastReceiver.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "service",
     "path": "android-components/service",
     "files": [
       {
-        "name": "Service.md",
-        "path": "android-components/service/a-service/Service.md"
+        "name": "service-workmanager-jobscheduler.md",
+        "path": "android-components/service/service-workmanager-jobscheduler.md"
       },
+      {
+        "name": "serviceApp.md",
+        "path": "android-components/service/serviceApp.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "a-service",
+    "path": "android-components/service/a-service",
+    "files": [
       {
         "name": "security-risks.md",
         "path": "android-components/service/a-service/security-risks.md"
       },
       {
-        "name": "Interview QnA",
+        "name": "interview.md",
         "path": "android-components/service/a-service/interview.md"
       },
       {
-        "name": "App Witout An Activity ?",
-        "path": "android-components/service/serviceApp.md"
-      },
-      {
-        "name": "workmanager.md",
-        "path": "android-components/service/workmanger/workmanager.md"
-      },
-      {
-        "name": "service-workmanager-jobscheduler.md",
-        "path": "android-components/service/service-workmanager-jobscheduler.md"
+        "name": "Service.md",
+        "path": "android-components/service/a-service/Service.md"
       }
     ],
     "is_root": false
   },
   {
-    "name": "Android Jetpack",
+    "name": "workmanger",
+    "path": "android-components/service/workmanger",
+    "files": [
+      {
+        "name": "workmanager.md",
+        "path": "android-components/service/workmanger/workmanager.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "android-jetpack",
     "path": "android-jetpack",
     "files": [
       {
@@ -91,26 +127,40 @@
     "is_root": false
   },
   {
-    "name": "Android Manifest & Permissions",
+    "name": "android-manifest",
     "path": "android-manifest",
     "files": [
       {
         "name": "Manifest.md",
         "path": "android-manifest/Manifest.md"
-      },
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "permissions",
+    "path": "android-manifest/permissions",
+    "files": [
       {
         "name": "Permissions.md",
         "path": "android-manifest/permissions/Permissions.md"
-      },
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "resources",
+    "path": "android-manifest/resources",
+    "files": [
       {
-        "name": "Resource Analysis",
+        "name": "Resources.md",
         "path": "android-manifest/resources/Resources.md"
       }
     ],
     "is_root": false
   },
   {
-    "name": "Android App Performance",
+    "name": "android-performance",
     "path": "android-performance",
     "files": [
       {
@@ -125,7 +175,18 @@
     "is_root": false
   },
   {
-    "name": "Android Intents",
+    "name": "app-structure",
+    "path": "app-structure",
+    "files": [
+      {
+        "name": "AppStructure.md",
+        "path": "app-structure/AppStructure.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "intents",
     "path": "intents",
     "files": [
       {
@@ -136,7 +197,7 @@
     "is_root": false
   },
   {
-    "name": "ProGuard/R8",
+    "name": "obfuscate",
     "path": "obfuscate",
     "files": [
       {
@@ -147,50 +208,51 @@
     "is_root": false
   },
   {
-    "name": "Programming Languages",
+    "name": "programming-languages",
     "path": "programming-languages",
     "files": [
       {
-        "name": "Kotlin & Java Concepts",
+        "name": "KotlinConcepts.md",
+        "path": "programming-languages/KotlinConcepts.md"
+      },
+      {
+        "name": "JavaConcepts.md",
+        "path": "programming-languages/JavaConcepts.md"
+      },
+      {
+        "name": "KotlinJavaConcepts.md",
         "path": "programming-languages/KotlinJavaConcepts.md"
       },
       {
-        "name": "JNI (Native Interface)",
+        "name": "Interoperability.md",
+        "path": "programming-languages/Interoperability.md"
+      },
+      {
+        "name": "JNI.md",
         "path": "programming-languages/JNI.md"
       }
     ],
     "is_root": false
   },
   {
-    "name": "Android Storage Methods",
+    "name": "storage-deep-dive",
     "path": "storage-deep-dive",
     "files": [
       {
-        "name": "Storage Overview",
-        "path": "storage-deep-dive/Storage.md"
-      },
-      {
-        "name": "SQLite & Room",
+        "name": "SQLite.md",
         "path": "storage-deep-dive/SQLite.md"
       },
       {
-        "name": "Firebase Cloud Storage",
+        "name": "Firebase.md",
         "path": "storage-deep-dive/Firebase.md"
       },
       {
-        "name": "File Handling & Scoped Storage",
+        "name": "FileHandling.md",
         "path": "storage-deep-dive/FileHandling.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "Build & App Structure",
-    "path": "app-structure",
-    "files": [
+      },
       {
-        "name": "App Structure (APK vs AAB)",
-        "path": "app-structure/AppStructure.md"
+        "name": "Storage.md",
+        "path": "storage-deep-dive/Storage.md"
       }
     ],
     "is_root": false
