@@ -146,29 +146,17 @@ onCreate → onStart → onResume
 
 > Launch Process Simple words (no flow chart) 
 
-**1. You tap the app icon →**
-
-Intent goes to Android system
-
-
-**2. Android checks →**
-
-"Is this app already running?"
-
-
-**3. If NO →**
-
-System creates a fresh process (like opening a new app)
-
-
-**4. If YES →**
-
-System reuses the existing process
-
-
-**5. Activity starts →**
-
-onCreate → onStart → onResume
+- **User taps icon** in Launcher app.
+- **Launcher fires an Intent** (ACTION_MAIN + CATEGORY_LAUNCHER) to the system via Binder.
+- **AMS/ATMS resolves target**: System identifies the target activity and checks task/back stack state.
+- **Zygote Forks**: If no process exists, Zygote forks a new process preloaded from the VM image.
+- **ActivityThread.main()**: Child process starts the app’s main thread.
+- **Setup Looper**: Main thread sets up Looper, message queue, and Binder plumbing.
+- **System Binds**: System sends a bind request; `LoadedApk` loads the app code.
+- **Application Created**: `attachBaseContext()` → `Application.onCreate()` runs first.
+- **Schedule Activity**: System schedules the target activity launch transaction.
+- **Reflection**: Instrumentation creates the Activity instance via reflection.
+- **Lifecycle Begins**: `Activity.attach()` runs, then `onCreate()`, `onStart()`, and `onResume()`.
 
 
 

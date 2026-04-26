@@ -257,8 +257,3 @@ No authentication in IPC
 
 ---
 
-If you want next:
-
-* Real **secure Service implementation (production-grade)**
-* OR **Top Android security scenarios asked at Google / Amazon level**
-

@@ -10,6 +10,7 @@ Welcome to the definitive deep dive into Android internals. This repository is a
 
 Understanding the layers beneath the code and how apps are packaged.
 
+- [**⚡ Interview Cheat Sheet (Final Glance)**](Interview_CheatSheet.md) - High-density prep.
 - [**Platform Architecture**](android-architecture/Architecture.md) - The 5-layer stack and system flow.
 - [**Build & App Structure**](app-structure/AppStructure.md) - APK vs AAB, DEX files, and Resource compilation.
 - [**Resource Analysis**](android-manifest/resources/Resources.md) - Deep dive into `res/` and `resources.arsc`.
@@ -52,7 +53,8 @@ Advanced concepts for senior-level engineering.
 - [**UI Rendering**](android-performance/UIRendering.md) - VSync, Choreographer, and RenderThread.
 - [**JNI & NDK**](programming-languages/JNI.md) - Native C++ bridging and Direct ByteBuffers.
 - [**Code Obfuscation**](obfuscate/ProguardR8.md) - R8 internals, Mapping files, and Keep rules.
-- [**WebView Security**](android-components/activity/WebView.md) - JS Injection risks and modern fixes.
+- [**WebView Security**](android-webview/WebView.md) - JS Injection risks and modern fixes.
+- [**Interview QnA (WebView)**](android-webview/interview.md) - High-level security questions.
 
 ### 🧩 Architectural Patterns
 

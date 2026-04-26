@@ -6,6 +6,10 @@
       {
         "name": "What's in the Book",
         "path": "README.md"
+      },
+      {
+        "name": "⚡ Interview Cheat Sheet (Final Glance)",
+        "path": "Interview_CheatSheet.md"
       }
     ],
     "is_root": true
@@ -164,7 +168,11 @@
       },
       {
         "name": "WebView Security",
-        "path": "android-components/activity/WebView.md"
+        "path": "android-webview/WebView.md"
+      },
+      {
+        "name": "Interview QnA (WebView)",
+        "path": "android-webview/interview.md"
       },
       {
         "name": "Interview QnA (Performance)",

@@ -32,3 +32,106 @@
 **How to Answer:**
 *   Define cancellation as "Cooperative".
 *   Suggest checking `ensureActive()` or `yield()` inside heavy loops to make them responsive to cancellation.
+
+
+### 4. JNI Mechanism (Senior) Suppose Kotlin code calls:
+
+```kotlin
+external fun getToken(): String
+```
+
+Explain **full internal mechanism** from this Kotlin call until C/C++ code executes and returns.
+
+Include:
+
+* `System.loadLibrary()`
+* symbol resolution
+* JNI bridge
+* JNIEnv
+* thread attachment
+* string conversion
+* performance cost
+* common crash reasons
+
+**Answer**
+
+1. App startup calls:
+
+```kotlin
+System.loadLibrary("native-lib")
+```
+
+2. ART asks linker to load `libnative-lib.so`.
+
+3. Native library loaded into process memory.
+
+4. Optional `JNI_OnLoad(JavaVM*)` executes for initialization and native registration.
+
+5. Kotlin calls:
+
+```kotlin
+external fun getToken(): String
+```
+
+6. ART/JNI resolves mapped native function by:
+
+* naming convention (`Java_pkg_Class_getToken`)
+* or `RegisterNatives()`
+
+7. Execution crosses managed ART → native C/C++ boundary.
+
+8. Native method receives:
+
+```cpp
+JNIEnv* env, jobject thiz
+```
+
+9. Native code creates return string:
+
+```cpp
+env->NewStringUTF("abc")
+```
+
+10. ART converts JNI return object back to Java/Kotlin `String`.
+
+### JNIEnv
+
+* Thread-local function table.
+* Used for:
+
+  * strings
+  * objects
+  * exceptions
+  * method calls
+  * arrays
+
+### Thread Attachment
+
+Only needed for threads created in native side:
+
+```cpp
+vm->AttachCurrentThread(...)
+```
+
+Detach later.
+
+### Performance Cost
+
+* Crossing JNI boundary
+* Marshaling objects/strings
+* GC coordination
+* Context switches between managed/native runtime semantics
+
+### Common Crash Reasons
+
+* Wrong signature mismatch
+* Missing symbol
+* Null pointer in C++
+* Use-after-free
+* Local reference overflow
+* Thread not attached
+* Returning invalid jobject
+* ABI mismatch (`arm64-v8a`, `armeabi-v7a`)
+* ProGuard renamed class used in manual registration
+
+---
