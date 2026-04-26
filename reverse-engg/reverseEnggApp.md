@@ -31,9 +31,25 @@ $ jadx-gui
 ```
 
 
-## Reverse-Engineering a Real Android App Using JADX (Step-by-Step)
-
 This guide shows how to reverse-engineer an APK manually using JADX, focusing on how a security researcher or penetration tester would approach it in a real scenario.
+
+---
+
+## 🛡️ Case A vs. Case B: Which one are you reversing?
+
+Before you start, identify if the app is "clean" or "hidden."
+
+### ✅ Case A: No Obfuscation (The Easy Way)
+The code is readable, names are clear (e.g., `LoginActivity`), and the structure makes sense. 
+**[Follow the guide below for Case A]**
+
+### 🔐 Case B: With Obfuscation (The Hard Way)
+The code is scrambled, names are single letters (e.g., `a.b.c`), and strings are encrypted.
+**[Click here to follow the specialized guide for Case B](./reverseEnggObfuscated.md)**
+
+---
+
+# Case A: Standard Reverse Engineering Workflow
 
 
 ### Step 1: Download the APK
