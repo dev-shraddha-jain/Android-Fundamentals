@@ -17,6 +17,10 @@
       {
         "name": "Architecture.md",
         "path": "android-architecture/Architecture.md"
+      },
+      {
+        "name": "Interview QnA",
+        "path": "android-architecture/Interview.md"
       }
     ],
     "is_root": false
@@ -86,6 +90,10 @@
       {
         "name": "DependencyInjection.md",
         "path": "android-jetpack/DependencyInjection.md"
+      },
+      {
+        "name": "Interview QnA",
+        "path": "android-jetpack/Interview.md"
       }
     ],
     "is_root": false
@@ -105,6 +113,10 @@
       {
         "name": "Resource Analysis",
         "path": "android-manifest/resources/Resources.md"
+      },
+      {
+        "name": "Interview QnA",
+        "path": "android-manifest/Interview.md"
       }
     ],
     "is_root": false
@@ -120,6 +132,10 @@
       {
         "name": "UIRendering.md",
         "path": "android-performance/UIRendering.md"
+      },
+      {
+        "name": "Interview QnA",
+        "path": "android-performance/Interview.md"
       }
     ],
     "is_root": false
@@ -131,6 +147,10 @@
       {
         "name": "Intents.md",
         "path": "intents/Intents.md"
+      },
+      {
+        "name": "Interview QnA",
+        "path": "intents/Interview.md"
       }
     ],
     "is_root": false
@@ -142,6 +162,10 @@
       {
         "name": "ProguardR8.md",
         "path": "obfuscate/ProguardR8.md"
+      },
+      {
+        "name": "Interview QnA",
+        "path": "obfuscate/Interview.md"
       }
     ],
     "is_root": false
@@ -151,12 +175,24 @@
     "path": "programming-languages",
     "files": [
       {
-        "name": "Kotlin & Java Concepts",
-        "path": "programming-languages/KotlinJavaConcepts.md"
+        "name": "Java Concepts (Beg to Adv)",
+        "path": "programming-languages/JavaConcepts.md"
+      },
+      {
+        "name": "Kotlin Concepts (Beg to Adv)",
+        "path": "programming-languages/KotlinConcepts.md"
+      },
+      {
+        "name": "Java & Kotlin Interoperability",
+        "path": "programming-languages/Interoperability.md"
       },
       {
         "name": "JNI (Native Interface)",
         "path": "programming-languages/JNI.md"
+      },
+      {
+        "name": "Interview QnA",
+        "path": "programming-languages/Interview.md"
       }
     ],
     "is_root": false
@@ -180,6 +216,10 @@
       {
         "name": "File Handling & Scoped Storage",
         "path": "storage-deep-dive/FileHandling.md"
+      },
+      {
+        "name": "Interview QnA",
+        "path": "storage-deep-dive/Interview.md"
       }
     ],
     "is_root": false
@@ -191,6 +231,10 @@
       {
         "name": "App Structure (APK vs AAB)",
         "path": "app-structure/AppStructure.md"
+      },
+      {
+        "name": "Interview QnA",
+        "path": "app-structure/Interview.md"
       }
     ],
     "is_root": false
