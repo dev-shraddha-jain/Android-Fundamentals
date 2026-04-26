@@ -23,14 +23,6 @@
         "path": "android-architecture/Architecture.md"
       },
       {
-        "name": "Build & App Structure",
-        "path": "app-structure/AppStructure.md"
-      },
-      {
-        "name": "Resource Analysis",
-        "path": "android-manifest/resources/Resources.md"
-      },
-      {
         "name": "Android Manifest",
         "path": "android-manifest/Manifest.md"
       },
@@ -196,6 +188,37 @@
       {
         "name": "Interview QnA",
         "path": "android-jetpack/Interview.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "7. Reverse Engineering",
+    "path": "",
+    "files": [
+      {
+        "name": "Build & App Structure",
+        "path": "app-structure/AppStructure.md"
+      },
+      {
+        "name": "Resource Analysis",
+        "path": "android-manifest/resources/Resources.md"
+      },
+      {
+        "name": "APK Analysis",
+        "path": "app-structure/apkAnalasys.md"
+      },
+      {
+        "name": "Guide To App",
+        "path": "reverse-engg/guideToApp.md"
+      },
+      {
+        "name": "ReverseEngg an App Using JADX",
+        "path": "reverse-engg/reverseEnggApp.md"
+      },
+      {
+        "name": "Interview QnA (Reverse Engineering)",
+        "path": "reverse-engg/Interview.md"
       }
     ],
     "is_root": false

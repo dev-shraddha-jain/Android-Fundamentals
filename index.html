@@ -24,6 +24,10 @@
     <aside id="sidebar">
       <div class="sidebar-header">
         <h1>Table of Contents</h1>
+        <div class="search-container">
+          <input type="text" id="search-bar" placeholder="Search topics..." autocomplete="off">
+          <span class="search-icon">🔍</span>
+        </div>
       </div>
       <nav id="nav-container">
         <!-- Navigation sections will be injected here -->
@@ -229,8 +233,37 @@
           renderPage(window.location.hash.slice(1) || 'README.md');
         });
 
+        // Search Functionality
+        const searchBar = document.getElementById('search-bar');
+        searchBar.addEventListener('input', (e) => {
+          const query = e.target.value.toLowerCase().trim();
+          const sections = document.querySelectorAll('.nav-section');
+          
+          sections.forEach(section => {
+            let sectionMatches = false;
+            const links = section.querySelectorAll('li');
+            const sectionTitle = section.querySelector('h2').textContent.toLowerCase();
+            
+            // If section title matches, show all links in it
+            const titleMatch = sectionTitle.includes(query);
+            
+            links.forEach(li => {
+              const linkText = li.textContent.toLowerCase();
+              const isMatch = titleMatch || linkText.includes(query);
+              li.style.display = isMatch ? 'block' : 'none';
+              if (isMatch) sectionMatches = true;
+            });
+            
+            section.style.display = sectionMatches ? 'block' : 'none';
+          });
+        });
+
         // Keyboard Navigation
         window.addEventListener('keydown', (e) => {
+          if (e.ctrlKey && e.key === 'f') {
+            e.preventDefault();
+            searchBar.focus();
+          }
           if (e.key === 'ArrowLeft' && prevBtn.style.visibility !== 'hidden') prevBtn.click();
           if (e.key === 'ArrowRight' && nextBtn.style.visibility !== 'hidden') nextBtn.click();
         });
