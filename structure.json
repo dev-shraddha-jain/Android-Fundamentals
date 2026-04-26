@@ -23,6 +23,10 @@
         "path": "app-structure/AppStructure.md"
       },
       {
+        "name": "Resource Analysis",
+        "path": "android-manifest/resources/Resources.md"
+      },
+      {
         "name": "Android Manifest",
         "path": "android-manifest/Manifest.md"
       },
@@ -61,7 +65,7 @@
         "name": "Content Providers",
         "path": "android-components/content-provider/ContentProvider.md"
       },
-       {
+      {
         "name": "WorkManager",
         "path": "android-components/service/workmanger/workmanager.md"
       },
@@ -70,8 +74,20 @@
         "path": "android-components/service/serviceApp.md"
       },
       {
-        "name": "Interview QnA (Components)",
+        "name": "Service vs WorkManager",
+        "path": "android-components/service/service-workmanager-jobscheduler.md"
+      },
+      {
+        "name": "Service Security Risks",
+        "path": "android-components/service/a-service/security-risks.md"
+      },
+      {
+        "name": "Interview QnA (Activity)",
         "path": "android-components/activity/interview.md"
+      },
+      {
+        "name": "Interview QnA (Services)",
+        "path": "android-components/service/a-service/interview.md"
       },
       {
         "name": "Interview QnA (Intents)",
@@ -95,6 +111,10 @@
       {
         "name": "Interoperability",
         "path": "programming-languages/Interoperability.md"
+      },
+      {
+        "name": "JNI (Native Interface)",
+        "path": "programming-languages/JNI.md"
       },
       {
         "name": "Interview QnA",
@@ -137,10 +157,6 @@
       {
         "name": "UI Rendering",
         "path": "android-performance/UIRendering.md"
-      },
-      {
-        "name": "JNI & NDK",
-        "path": "programming-languages/JNI.md"
       },
       {
         "name": "Code Obfuscation",
