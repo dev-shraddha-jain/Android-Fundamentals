@@ -172,6 +172,17 @@
     "is_root": false
   },
   {
+    "name": "app-structure",
+    "path": "app-structure",
+    "files": [
+      {
+        "name": "AppStructure.md",
+        "path": "app-structure/AppStructure.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
     "name": "intents",
     "path": "intents",
     "files": [
@@ -192,71 +203,24 @@
       }
     ],
     "is_root": false
-<<<<<<< HEAD
   },
   {
-    "name": "WebView",
-    "path": "",
-    "files": [
-      {
-        "name": "Injecting js in Android Webview",
-        "path": "WebView.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "Android Storage Methods",
-    "path": "",
-    "files": [
-      {
-        "name": "Storage",
-        "path": "Storage.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "C, C++ & JNI",
-    "path": "",
-    "files": [
-      {
-        "name": "JNI",
-        "path": "JNI.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "Build & App Structure",
-    "path": "app-structure",
-    "files": [
-      {
-        "name": "App Structure (APK vs AAB)",
-        "path": "app-structure/AppStructure.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "Programming Languages",
+    "name": "programming-languages",
     "path": "programming-languages",
     "files": [
       {
-        "name": "Java Concepts (Beg to Adv)",
-        "path": "programming-languages/JavaConcepts.md"
-      },
-      {
-        "name": "Kotlin Concepts (Beg to Adv)",
+        "name": "KotlinConcepts.md",
         "path": "programming-languages/KotlinConcepts.md"
       },
       {
-        "name": "Java & Kotlin Interoperability",
+        "name": "JavaConcepts.md",
+        "path": "programming-languages/JavaConcepts.md"
+      },
+      {
+        "name": "Interoperability.md",
         "path": "programming-languages/Interoperability.md"
       }
     ],
     "is_root": false
-=======
->>>>>>> bc3a3dea84953372f384c75ff79580a7e4e64fae
   }
 ]
