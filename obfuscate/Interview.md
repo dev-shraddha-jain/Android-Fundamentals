@@ -71,6 +71,8 @@ You must use `-keep` to preserve the class name and its constructors.
 ### Q7. [Tricky] What is the difference between `minifyEnabled` and `obfuscate` in `build.gradle`?
 
 **Answer:**
+`minifyEnabled true` is the main switch in your `build.gradle` that enables the R8/ProGuard tool. This tool handles three distinct phases: **Shrinking** (removing unused code/resources), **Optimization**, and **Obfuscation**. There is no separate `obfuscate` flag in Gradle; instead, obfuscation is a sub-feature of minification. If you want to shrink code but *not* obfuscate it (common for library debugging), you keep `minifyEnabled true` but add `-dontobfuscate` to your `proguard-rules.pro` file.
+
 
 ### Q8 Your release app crashes only in **release build**, debug works fine. Likely due to R8/ProGuard. Explain full debugging mechanism:
 

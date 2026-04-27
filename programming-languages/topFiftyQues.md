@@ -549,89 +549,7 @@ Use `serialVersionUID`
 
 ---
 
-# 38. Inner Classes & Static Nested Classes
-
-*   **Static Nested Class:** Doesn't need outer class instance. Cannot access non-static members.
-*   **Inner Class:** Tied to outer instance. Has implicit reference to `Outer.this`.
-*   **Local Inner Class:** Defined inside a method.
-*   **Anonymous Inner Class:** No name, used for one-time implementation (replaced mostly by Lambdas).
-
----
-
-# 39. Functional Interfaces
-
-Interfaces with exactly one abstract method.
-
-*   **Predicate<T>:** `test(T) -> boolean`
-*   **Consumer<T>:** `accept(T) -> void`
-*   **Supplier<T>:** `get() -> T`
-*   **Function<T, R>:** `apply(T) -> R`
-
-Used as targets for Lambda expressions.
-
----
-
-# 40. Lambda Expressions Internals
-
-Lambdas are NOT just syntactic sugar for anonymous classes.
-
-*   **Anonymous Class:** Generates a new `.class` file.
-*   **Lambda:** Uses **`invokedynamic`** instruction. The JVM generates the implementation at runtime, which is more memory efficient and faster.
-
----
-
-# 41. Default & Static Methods (Interfaces)
-
-*   **Default Methods:** Allow adding new methods to interfaces without breaking existing implementations.
-*   **Static Methods:** Utility methods inside interfaces.
-
----
-
-# 42. Java 8+ Time API
-
-Old `java.util.Date` was mutable and not thread-safe.
-
-*   **LocalDate, LocalTime, LocalDateTime:** Immutable and thread-safe.
-*   **Duration, Period:** Represent time intervals.
-*   **Instant:** Represents a point in time (UTC).
-
----
-
-# 43. Object Methods Contract
-
-*   **equals():** Must be reflexive, symmetric, transitive, and consistent.
-*   **hashCode():** If `a.equals(b)`, then `a.hashCode() == b.hashCode()`. 
-*   **Important:** Always override both or neither.
-
----
-
-# 44. Concurrent Collections
-
-*   **CopyOnWriteArrayList:** Thread-safe. Creates a fresh copy on every mutation. Great for "read-heavy" data.
-*   **ConcurrentHashMap:** Uses bucket-level locking (segments in older Java) to allow concurrent reads/writes.
-*   **BlockingQueue:** Used for Producer-Consumer patterns.
-
----
-
-# 45. Modern Java (11-21) Features
-
-*   **Records (Java 14):** Immutable data carriers. Auto-generates `equals`, `hashCode`, `toString`, and getters.
-*   **Sealed Classes (Java 15):** Restrict which classes can extend them.
-*   **Pattern Matching (Java 16+):** Simplifies `instanceof` checks.
-*   **Virtual Threads (Java 21):** Lightweight threads managed by the JVM (Project Loom).
-
----
-
-# 46. Reference Types
-
-*   **Strong Reference:** Standard reference. Never GC'd.
-*   **Soft Reference:** GC'd only when memory is low. Good for caches.
-*   **Weak Reference:** GC'd immediately if no strong refs exist. Used in `WeakHashMap`.
-*   **Phantom Reference:** Used to track when an object is physically removed from memory.
-
----
-
-# 47. Senior Interview Hot Questions
+# 37. Senior Interview Hot Questions
 
 ## Q. Why HashMap not thread-safe?
 
@@ -655,11 +573,47 @@ Thread reuse and control.
 
 ---
 
-## 🎯 Interview-Ready Answer (Senior)
+# 38. Must Master Internals
 
-**Q: Explain the difference between JVM, DVM, and ART.**
+* HashMap
+* synchronized
+* volatile
+* class loading
+* GC
+* String pool
+* thread pool
+* JMM
 
-**Answer:**
+---
 
-> **JVM** is the standard Java machine. **DVM (Dalvik Virtual Machine)** was built for older Android; it used register-based architecture and JIT. **ART (Android Runtime)** is the modern successor; it uses **AOT (Ahead-of-Time)** compilation to compile DEX into native machine code during installation, making apps launch faster and perform better.
+# 39. If You’re Android Senior Dev
 
+Extra revise:
+
+* Handler / Looper
+* Memory leaks
+* ANR causes
+* Threading model
+* JNI basics
+* ProGuard/R8
+* Collections optimization
+
+---
+
+# 40. Golden Rule
+
+For every topic know:
+
+```text
+What
+Why
+How internally
+When use
+When avoid
+Complexity
+Thread safety
+```
+
+---
+
+# If you want, I can also make **Senior Java Notes PDF**, **100 Interview Q&A**, or **Java Internals Diagram Notes** next.

@@ -180,7 +180,14 @@
 
 ### Q17. [Architecture] How do you implement MVVM with Activities and ViewModels?
 
-Answer:
+**Answer:**
+In a standard MVVM implementation:
+1. **The View (Activity):** Responsible only for UI logic and observing data. It gets a reference to the `ViewModel` using `viewModels()` or `ViewModelProvider`. It uses `repeatOnLifecycle` or `observe()` to listen to data streams.
+2. **The ViewModel:** Holds the UI state and handles user interactions. It communicates with the Repository and exposes data through observable types like `StateFlow`, `SharedFlow`, or `LiveData`. It **never** holds a reference to the Activity/Context to avoid memory leaks.
+3. **The Data Layer (Repository):** A single source of truth for data, coordinating between local (Room) and remote (Retrofit) data sources.
+
+**Key Benefit:** This ensures that the Activity remains "dumb" and lifecycle-aware, while the business logic and state are preserved during configuration changes by the ViewModel.
+
 
 ### Q18.Explain why Android uses Zygote process instead of creating every app process from scratch.
 Include:
