@@ -5,9 +5,35 @@ File handling in Android involves reading/writing to the local filesystem. This 
 
 ---
 
+## 🔗 Real-World Process: Scoped Storage
+
+```text
+[ App Requests File Access ]
+             ↓
+     Is it App-Private?
+     ↙               ↘
+  [ YES ]          [ NO ]
+    ↓                ↓
+[ Access Granted ] [ System Check ]
+(No permission     (Scoped Storage)
+ needed)             ↓
+               [ MediaStore API ]
+                     ↓
+               [ User Approval ]
+```
+
 ## 📂 Storage Locations
 1.  **Internal Storage:** App-private files. No permissions needed. Deleted when the app is uninstalled.
+
+```text
+/data/data/<your-app-package-name>/files
+```
+
 2.  **External Storage (Shared):** Media files (Photos, Downloads). Requires Scoped Storage APIs (MediaStore).
+
+```text
+/storage/emulated/0/Android/data/<your-app-package-name>/files
+```
 
 ## 🛡️ Scoped Storage
 Apps are no longer allowed to access the entire SD card using simple file paths (e.g., `/sdcard/DCIM/`). 

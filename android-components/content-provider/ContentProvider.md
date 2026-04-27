@@ -32,6 +32,9 @@ val cursor = contentResolver.query(
 
 <iframe src="content_provider_mechanism.html" width="100%" height="450px" style="border:none; border-radius: 8px; margin: 1.5rem 0;"></iframe>
 
+
+For more examples, refer to [example.md](example.md).
+
 ## 🧠 Core Idea
 > It’s a security layer. Instead of giving another app direct access to your database file, you provide a URI and handle the query yourself.
 

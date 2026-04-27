@@ -12,6 +12,7 @@ Firebase is a platform by Google that provides several cloud-based storage solut
 
 ## 🔐 Security Rules
 One of the most important concepts in Firebase is **Security Rules**. Since the client talks directly to the database, you must define rules to prevent unauthorized access.
+
 ```text
 allow read, write: if request.auth != null;
 ```

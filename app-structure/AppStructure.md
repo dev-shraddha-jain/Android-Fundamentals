@@ -48,4 +48,11 @@ XML files are slow to parse at runtime. During build, Android:
 **Q: Why should I use AAB instead of APK for publishing?**
 
 **Answer:**
-> AAB (Android App Bundle) reduces the download size for users. Unlike a "Fat APK" that contains all languages, screen densities, and CPU architectures, the App Bundle allows Google Play to serve only the specific resources needed for the user's device, often reducing app size by 20-50%.
+> **AAB (Android App Bundle)** is the modern publishing format that replaces the traditional APK for the Play Store. It is more than just a size reduction tool; it represents a shift in how apps are delivered:
+>
+> 1. **Dynamic Delivery (Split APKs):** Instead of a single "Fat APK," Google Play uses the bundle to generate a **Base APK** (core logic) and multiple **Configuration APKs** (specific to the user's language, screen density, and CPU architecture). The user only downloads what their device actually uses.
+> 2. **Size Optimization:** By stripping out irrelevant resources, apps are typically **20-50% smaller**, leading to higher install conversion rates and fewer uninstalls due to storage issues.
+> 3. **Dynamic Feature Modules:** Developers can modularize their apps to deliver specific features **on-demand** (e.g., a heavy "Camera Filter" module that is only downloaded when the user first clicks it) or conditionally (based on device capabilities like AR support).
+> 4. **Play App Signing:** To use AAB, you must use Play App Signing. Google manages your app's signing key, protecting you if you lose your local upload key and allowing Google to optimize and re-sign your APKs for delivery.
+> 5. **Mandatory Requirement:** As of August 2021, all **new apps** are required to publish using the AAB format.
+

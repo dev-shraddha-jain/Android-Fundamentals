@@ -217,6 +217,10 @@
         "path": "reverse-engg/reverseEnggApp.md"
       },
       {
+        "name": "ReverseEngg an Obfuscated App Using JADX",
+        "path": "reverse-engg/reverseEnggObfuscated.md"
+      },
+      {
         "name": "Interview QnA (Reverse Engineering)",
         "path": "reverse-engg/Interview.md"
       }
