@@ -1,34 +1,29 @@
 # Interview QnA: Android Storage Methods
 
-### Q1. [How Mechanism] How does Room's `fallbackToDestructiveMigration()` work?
-**The Mechanism:**
-*   If Room detects a version change but no `Migration` path, it checks for this flag.
-*   If enabled, it drops all existing tables and recreates them from scratch using the new schema.
-*   All user data in those tables is lost.
-
-**How to Answer:**
-*   Warn that this is dangerous for production apps.
-*   Explain that it is useful for rapid prototyping where data persistence isn't critical.
-*   Suggest providing explicit migrations for any app with real user data.
+### Q1. How does Room's `fallbackToDestructiveMigration()` work?
+**Answer:**
+*   Room stores a **hash of your schema** in the database. On open, it compares the stored hash against the current entity definitions.
+*   If the version number changed but no matching `Migration` object is provided, Room normally throws an `IllegalStateException` and crashes.
+*   With `fallbackToDestructiveMigration()`, instead of crashing, Room **drops all tables and recreates them** from scratch using the new schema.
+*   All existing user data in those tables is permanently lost.
+*   Safe for development/prototyping. Dangerous in production — always write explicit migrations instead.
 
 ---
 
-### Q2. [Tricky] Why did Android move to "Scoped Storage"?
-**The Reason:**
-*   Previously, any app with "Storage Permission" could read/write every file on the SD card (Privacy nightmare).
-*   Scoped Storage isolates apps to their own folders and requires high-level APIs (`MediaStore`) for shared files.
-
-**How to Answer:**
-*   Focus on **Privacy** and **Security**.
-*   Mention that it prevents apps from "polluting" the SD card with random folders.
+### Q2. Why did Android move to "Scoped Storage"?
+**Answer:**
+*   Before Scoped Storage (pre-Android 10), any app with `READ_EXTERNAL_STORAGE` or `WRITE_EXTERNAL_STORAGE` could read and write **every file on the device's SD card** — including other apps' files.
+*   This was a massive **privacy and security risk** — a photo editor could silently read your banking documents.
+*   Scoped Storage restricts each app to:
+    *   Its **own private directory** (`context.getExternalFilesDir()`) with no permission required.
+    *   Shared media (photos, music, video) accessible only via the **`MediaStore` API**.
+    *   Other files only via the **Storage Access Framework** (user explicitly picks the file).
 
 ---
 
-### Q3. [What If] What if you try to perform a Room database operation on the Main Thread?
-**The Result:**
-*   By default, Room will throw an `IllegalStateException` at runtime.
-*   This is a safety measure to prevent ANR (Application Not Responding) errors.
-
-**How to Answer:**
-*   Explain that database I/O is slow and must be offloaded.
-*   Suggest using `suspend` functions in the DAO and calling them via `Dispatchers.IO`.
+### Q3. What if you perform a Room database operation on the Main Thread?
+**Answer:**
+*   By default, Room **throws an `IllegalStateException` immediately** at runtime: *"Cannot access database on the main thread since it may potentially lock the UI."*
+*   This is intentional — SQLite I/O can take tens or hundreds of milliseconds, which would block the main thread and cause Jank or ANR.
+*   You can bypass it with `allowMainThreadQueries()` — but only in tests, never in production code.
+*   **Correct approach:** Declare DAO methods as `suspend fun` and call them from a coroutine on `Dispatchers.IO`, or return `Flow<T>` which Room automatically emits on a background thread.

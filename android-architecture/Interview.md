@@ -1,83 +1,60 @@
 # Interview QnA: Android Architecture
 
 ### Q1. How does the Android "Application Sandbox" work at the Linux level?
-**The "How" Mechanism:**
-*   Each Android app is assigned a unique Linux User ID (UID).
-*   The app runs as a separate process under that UID.
-*   The Linux kernel enforces security between apps by preventing one UID from accessing the files or memory of another UID.
-
-**How to Answer:**
-*   Start by mentioning that Android is built on top of the Linux kernel.
-*   Explain that the sandbox is not just a high-level concept but a kernel-level enforcement using UIDs.
-*   Highlight that this is why apps need "Permissions" to talk to each other (IPC).
+**Answer:**
+*   Every Android app is assigned a **unique Linux User ID (UID)** at install time by the PackageManagerService.
+*   The app runs as a separate Linux process under that UID.
+*   The **Linux kernel** enforces isolation — one UID cannot read the memory, files, or sockets of another UID.
+*   This is not a high-level software concept — it is enforced at the OS kernel level.
+*   Apps communicate across sandbox boundaries only via explicit IPC mechanisms (Binder, ContentProvider, Intents) with explicit permission grants.
 
 ---
 
-### Q2. [Tricky] What is the difference between a "Cold Start" and "Warm Start" from a system perspective?
-**The Mechanism:**
-*   **Cold Start:** The system must create a new Linux process, initialize the ART (Android Runtime), and then create the Application object.
-*   **Warm Start:** The process already exists, but the Activity was destroyed and needs to be recreated (or the app is brought from background).
-
-**How to Answer:**
-*   Emphasize that a Cold Start involves the Zygote process forking a new process.
-*   Mention that Warm starts are faster because they skip the process creation and runtime initialization overhead.
+### Q2. What is the difference between a "Cold Start" and "Warm Start"?
+**Answer:**
+*   **Cold Start:** No process exists. The system forks a new process from **Zygote**, initializes the **ART runtime**, creates the `Application` object, then starts the first Activity. This is the slowest path.
+*   **Warm Start:** The process exists in memory. The system recreates the Activity (because it was destroyed) but skips process creation and runtime init. Faster than cold.
+*   **Hot Start:** The process and Activity both exist in memory (user just navigated away briefly). The system just brings the Activity back to the foreground. Fastest path.
 
 ---
 
-### Q3. [What If] What happens if the Zygote process crashes?
-**The Scenario:**
-*   Since Zygote is the parent of all app processes, its crash is catastrophic.
-*   The Android System Server will detect the crash.
-*   The entire Android runtime will restart (Soft Reboot), causing all running apps to close.
-
-**How to Answer:**
-*   Identify Zygote as the "Process Incubator".
-*   Explain that it pre-loads system classes and resources to speed up app launches.
-*   Conclude that its failure triggers a system-wide reset because the root of the process tree is gone.
+### Q3. What happens if the Zygote process crashes?
+**Answer:**
+*   Zygote is the **parent of all app processes**. Its crash is catastrophic.
+*   The Android System Server detects the crash via a process death signal.
+*   The entire Android runtime performs a **soft reboot** — all running apps are killed.
+*   Zygote pre-loads Android framework classes and resources at boot so that `fork()` is fast — without it, no new app process can be spawned.
 
 ---
 
 ### Q4. How does the System Server differ from the Kernel?
-**The Mechanism:**
-*   The **Kernel** handles hardware abstraction, memory management, and process scheduling.
-*   The **System Server** is a high-level process that hosts system services like `ActivityManagerService` (AMS), `PackageManagerService` (PMS), and `WindowManagerService` (WMS).
-
-**How to Answer:**
-*   Distinguish between "Low-level" (Kernel) and "Framework-level" (System Server) services.
-*   Mention that apps communicate with the System Server via Binder IPC.
+**Answer:**
+*   The **Kernel** handles low-level OS duties: hardware drivers, memory management, process scheduling, and the **Low Memory Killer**.
+*   The **System Server** is a managed Java/Kotlin process that hosts Android framework services: `ActivityManagerService` (AMS), `PackageManagerService` (PMS), `WindowManagerService` (WMS).
+*   Apps communicate with System Server services via **Binder IPC** — not direct function calls.
+*   The kernel doesn't know what an "Activity" is; that concept lives entirely in the System Server.
 
 ---
 
-### Q5. [How Mechanism] How does the system choose which DEX file to load first in a multi-DEX APK?
-**The Mechanism:**
-*   The primary `classes.dex` contains the startup classes (Application, Splash screen, etc.).
-*   Secondary DEX files (`classes2.dex`, etc.) are loaded as needed or during app startup if using the `MultiDex` library.
-*   The `MainDexList` configuration determines which classes MUST go into the primary DEX.
-
-**How to Answer:**
-*   Explain the 65k method limit that led to Multi-DEX.
-*   Mention that modern Android (API 21+) handles Multi-DEX natively via the ART runtime.
+### Q5. How does the system choose which DEX file to load first in a multi-DEX APK?
+**Answer:**
+*   The **primary `classes.dex`** must contain all startup-critical classes: `Application`, the first `Activity`, the `MultiDex` installer itself.
+*   Secondary files (`classes2.dex`, `classes3.dex`) are loaded either lazily or during startup via the `MultiDex` library.
+*   The **`MainDexList`** Gradle configuration determines which classes are forced into the primary DEX.
+*   Multi-DEX exists because the **Dalvik/ART method reference limit is 65,536** (the 65k method limit). Modern Android (API 21+) handles it natively via ART.
 
 ---
 
-### Q6. [Tricky] Why are resources like strings and layouts compiled into binary XML?
-**The Reason:**
-*   Parsing plain text XML at runtime is slow and memory-intensive.
-*   Binary XML is pre-parsed and optimized for the Android system to read quickly.
-
-**How to Answer:**
-*   Focus on **Performance** and **Battery Life**.
-*   Mention that compilation happens during the build process so the phone doesn't have to do it.
+### Q6. Why are Android resources compiled into binary XML?
+**Answer:**
+*   Parsing plain text XML at runtime requires a full tokenizer, string allocation, and DOM construction — it is slow and memory-intensive.
+*   Binary XML is **pre-parsed at build time** into a compact binary format (`resources.arsc` and binary `.xml` files) that the system reads directly with minimal allocation.
+*   This improves **app startup time** and reduces **battery usage** because the CPU does less work per frame.
 
 ---
 
-### Q7. [What If] What if you include a 10MB image in the `res/drawable/` folder?
-**The Impact:**
-*   The APK size will increase significantly.
-*   Loading that image into memory will consume a large portion of the app's heap, potentially leading to an `OutOfMemoryError`.
-
-**How to Answer:**
-*   Advise against large assets in the APK.
-*   Suggest using **Vector Drawables** for icons and **WebP** or optimized JPGs for photos.
-*   Mention "Dynamic Delivery" (AAB) to serve specific image sizes to specific devices.
-
+### Q7. What if you include a 10MB image in `res/drawable/`?
+**Answer:**
+*   The **APK size increases** by ~10MB, impacting download and install rates.
+*   At runtime, loading the image decodes it into a Bitmap in RAM. A 10MB PNG can expand to **40-100MB of heap memory** (width × height × 4 bytes per pixel), easily triggering an `OutOfMemoryError`.
+*   **Fix:** Use **Vector Drawables** for icons (scale perfectly, tiny file size). Use **WebP** for photos (30-40% smaller than JPEG at same quality). Use Android App Bundle + **Density Splits** so the system serves the correctly sized drawable to each device.

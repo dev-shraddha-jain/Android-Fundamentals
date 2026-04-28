@@ -63,7 +63,14 @@ biometricPrompt.authenticate(PromptInfo.Builder()
 ```
 
 ### Interview Answer
-> A banking app follows Clean Architecture with 3 layers. The data layer uses Room with SQLCipher for encrypted local storage, Retrofit with CertificatePinner + mTLS for network calls, and Android Keystore for token management. Biometric authentication gates sensitive operations. Offline balance is cached in Room and synced via WorkManager when connectivity is restored. The architecture uses MVI to ensure every state transition is deterministic and auditable.
+**The Architecture:**
+*   **Layered Design:** 3-tier Clean Architecture (Presentation, Domain, Data) using MVI for deterministic state transitions.
+*   **Data Security:** Room with SQLCipher for local storage; Keystore with EncryptedSharedPreferences for tokens.
+*   **Network Security:** Retrofit with CertificatePinner (mTLS) to prevent MITM attacks.
+
+**How to Answer:**
+*   Emphasize that biometric authentication gates sensitive operations locally.
+*   Mention that offline balances are cached in Room and synced securely via WorkManager when connectivity restores.
 
 ---
 
@@ -136,7 +143,14 @@ class PaymentViewModel(private val repo: PaymentRepository) : ViewModel() {
 ```
 
 ### Interview Answer
-> UPI payment on Android follows an async flow. The app initiates via a POST to the PSP backend, which communicates with NPCI. The UPI PIN is collected through a secure SDK (never handled by app code directly). Since payment settlement is async, the app either polls the status endpoint with exponential backoff, or uses a WebSocket for push updates. All pending transactions are persisted in Room so status can be recovered after app kill or crash.
+**The Mechanism:**
+*   **Async Flow:** The app POSTs to the PSP backend, which talks to NPCI.
+*   **Secure Input:** UPI PIN is collected through an isolated, secure SDK, never directly handled by your app code.
+*   **Resolution:** Payment settlement is async. The app either polls the status endpoint (with exponential backoff) or listens via WebSockets for the final push.
+
+**How to Answer:**
+*   Highlight the importance of the async nature of UPI.
+*   Mention that pending transactions are persisted in Room so that the status can be recovered even after an app crash or process death.
 
 ---
 
@@ -208,7 +222,14 @@ fun scheduleSyncIfNeeded(context: Context) {
 ```
 
 ### Interview Answer
-> The offline sync architecture uses Room as the local source of truth. All user actions are written locally first with status PENDING. A WorkManager job with a CONNECTED constraint watches for network availability. When restored, the worker reads all PENDING records in order, submits them to the API, and marks each SYNCED. Failures use exponential backoff with a max retry cap. This ensures no data loss even through process death.
+**The Mechanism:**
+*   **Local Source of Truth:** All user actions are written locally to Room first, with a `PENDING` status.
+*   **Connectivity Trigger:** A WorkManager job with a `CONNECTED` network constraint watches for availability.
+*   **Batch Execution:** When restored, the worker reads all `PENDING` records in order, submits them via API, and marks them `SYNCED`.
+
+**How to Answer:**
+*   Point out that this design ensures zero data loss, even through process death.
+*   Mention that failures should use **Exponential Backoff** with a max retry cap to prevent battery drain.
 
 ---
 
@@ -281,7 +302,16 @@ class AppMessagingService : FirebaseMessagingService() {
 ```
 
 ### Interview Answer
-> FCM delivers the push to `FirebaseMessagingService`. If the app is foreground we show an in-app overlay; if background or killed, we build a `NotificationCompat` and post it to the system tray. Each notification carries a type and payload that drives deep linking via `NavDeepLinkBuilder`. Notifications are also persisted to Room for a notification center screen. FCM tokens are refreshed via `onNewToken` and synced to the backend.
+**The Mechanism:**
+*   **Delivery:** FCM delivers push payloads to `FirebaseMessagingService`.
+*   **State Handling:** 
+    *   *Foreground:* Show an in-app overlay/banner.
+    *   *Background/Killed:* Build a `NotificationCompat` and post it to the system tray.
+*   **Deep Linking:** Each payload contains a type that drives routing via `NavDeepLinkBuilder`.
+
+**How to Answer:**
+*   Explain that FCM tokens must be refreshed via `onNewToken` and synced to your backend.
+*   Suggest persisting notifications locally to Room if you need an in-app "Notification Center" history.
 
 ---
 
@@ -337,4 +367,12 @@ dashboardNavGraph {
 ```
 
 ### Interview Answer
-> We split the app into `:feature:*` modules for each product feature and `:core:*` modules for shared infrastructure. The `:core:domain` module contains only pure Kotlin — interfaces, use cases, and domain models. The `:core:data` module implements those interfaces. Feature modules depend only on `:core:domain` and `:core:ui` — never on each other. Cross-feature navigation happens exclusively through the `:app` module's NavGraph using callbacks or shared navigation events. This enforces strict boundaries, enables parallel team development, and reduces incremental build times significantly.
+**The Mechanism:**
+*   **Horizontal Split:** Features are split into `:feature:*` modules.
+*   **Vertical Split:** Shared infrastructure lives in `:core:*` modules (`:core:domain`, `:core:ui`, `:core:data`).
+*   **Strict Dependency Flow:** Feature modules depend only on `:core:domain` and `:core:ui`. They *never* depend on each other.
+
+**How to Answer:**
+*   Explain that `:core:domain` contains only pure Kotlin (interfaces, use cases) while `:core:data` implements them.
+*   Highlight that cross-feature navigation happens exclusively through the root `:app` module's NavGraph.
+*   Mention the primary benefits: strict boundaries, parallel team development, and significantly reduced incremental build times.

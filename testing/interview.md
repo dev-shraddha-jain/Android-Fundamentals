@@ -4,24 +4,46 @@
 
 ## Testing Interview Questions
 
-### Q1. What is the testing pyramid and why does it matter?
+### Q1. [How Mechanism] What is the testing pyramid and why does it matter?
+**The Mechanism:**
+*   **Unit Tests (Base):** Fast, isolated, run on the JVM (70% of tests).
+*   **Integration Tests (Middle):** Room + Retrofit, often require an emulator (20% of tests).
+*   **UI/E2E Tests (Top):** Slow, full device execution, flaky (10% of tests).
 
-> The testing pyramid has **Unit Tests** at the base (fast, JVM, isolated), **Integration Tests** in the middle (Room + Retrofit, emulator), and **UI/E2E Tests** at the top (slow, full device). The rule is 70/20/10 — most coverage through unit tests, least through UI tests. An inverted pyramid (mostly UI tests) is an anti-pattern: it's slow, flaky, and expensive to maintain.
-
----
-
-### Q2. How do you test a ViewModel with coroutines?
-
-> You need to replace `Dispatchers.Main` with a `TestCoroutineDispatcher` using a `TestWatcher` rule. Then use `runTest {}` to run the coroutine synchronously. For `StateFlow` emissions, use the Turbine library — `vm.uiState.test { awaitItem() }` — to assert each emitted state in order.
-
----
-
-### Q3. Fake vs Mock — which do you prefer for repositories?
-
-> I prefer **Fakes** for repositories because repositories often return `Flow`, and mocking a cold flow with Mockito/MockK is verbose and error-prone. A handwritten `FakeUserRepository` with simple state fields (`userToReturn`, `shouldThrowError`) is far more readable and maintainable. I use **Mocks** when I need to verify that a specific method was called exactly N times, like confirming `analyticsService.logEvent()` was invoked on a button click.
+**How to Answer:**
+*   Explain the 70/20/10 ratio rule.
+*   Mention that an "inverted pyramid" (mostly UI tests) is an anti-pattern because it's slow and expensive to maintain.
 
 ---
 
-### Q4. How do you test Room DAOs?
+### Q2. [Tricky] How do you test a ViewModel with coroutines?
+**The Mechanism:**
+*   You must replace the Main dispatcher because `Dispatchers.Main` relies on the Android Looper which isn't available in standard JVM tests.
+*   Use a `TestWatcher` rule to inject a `StandardTestDispatcher` or `UnconfinedTestDispatcher`.
+*   Wrap your test execution in `runTest {}` to advance virtual time and skip `delay()` calls.
 
-> Use `Room.inMemoryDatabaseBuilder()` in an `AndroidJUnit4` test. An in-memory database is real SQLite — it validates your actual queries. Call `allowMainThreadQueries()` only in tests. Use Turbine to test `Flow<List<T>>` DAOs so you can observe multiple emissions as data changes.
+**How to Answer:**
+*   Mention the `TestDispatcher` replacement.
+*   Highlight the use of the **Turbine** library (`vm.uiState.test { awaitItem() }`) for cleanly testing `StateFlow` and `SharedFlow` emissions.
+
+---
+
+### Q3. [Architecture] Fake vs Mock — which do you prefer for repositories?
+**The Answer:**
+*   **Fakes:** Hand-written classes with simple state fields (`userToReturn`, `shouldThrowError`).
+*   **Mocks:** Framework-generated objects (Mockito/MockK) that verify exact method calls.
+
+**How to Answer:**
+*   Strongly prefer **Fakes** for Repositories because they return `Flow`. Mocking cold flows is verbose and error-prone.
+*   Reserve **Mocks** for verifying exact interactions (e.g., verifying `analyticsService.logEvent()` was called N times).
+
+---
+
+### Q4. [Database] How do you test Room DAOs?
+**The Mechanism:**
+*   Use `Room.inMemoryDatabaseBuilder()` in an `AndroidJUnit4` (instrumented or Robolectric) test.
+*   This uses real SQLite to validate your actual queries, but disappears when the test ends.
+
+**How to Answer:**
+*   Mention that `allowMainThreadQueries()` is acceptable **only** in tests.
+*   Advise using the **Turbine** library to test `Flow<List<T>>` DAOs so you can insert a row and assert the next emission immediately.

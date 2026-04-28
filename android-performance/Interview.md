@@ -1,36 +1,27 @@
 # Interview QnA: Android App Performance
 
-### Q1. [How Mechanism] How does the "Choreographer" handle UI rendering?
-**The Mechanism:**
-*   The Choreographer receives a VSync signal (usually every 16.6ms for 60fps).
-*   It coordinates the timing of animations, input events, and layout/draw traversals.
-*   It ensures that the UI thread only starts working on the next frame when the hardware is ready.
-
-**How to Answer:**
-*   Define the Choreographer as the "Drummer" of the UI thread.
-*   Explain that "Skipped Frames" happen when the UI thread is too busy to respond to the Choreographer's signal.
-*   Mention that 120Hz displays give the Choreographer only 8.3ms per frame.
+### Q1. How does the "Choreographer" handle UI rendering?
+**Answer:**
+*   The display hardware emits a **VSync signal** every 16.6ms (for 60fps) or every 8.3ms (for 120Hz).
+*   The **Choreographer** receives this signal and acts as the "beat" coordinator for the UI thread — it signals when to start the next frame's input handling, animation ticks, and measure/layout/draw traversal.
+*   If the UI thread is busy (e.g., running a database query), it misses the VSync — this is called a **dropped frame** or "Jank".
+*   Systrace and Android Profiler show Choreographer missed frames as red bars in the timeline.
 
 ---
 
-### Q2. [Tricky] Does a Memory Leak always lead to an `OutOfMemoryError` (OOM)?
-**The Answer:**
-*   No. A small memory leak might never trigger an OOM if the user closes the app before the heap is full.
-*   However, it causes the Garbage Collector to run more frequently (**GC Thrashing**), which leads to UI stutters (Jank).
-
-**How to Answer:**
-*   Clarify that the primary symptom of a leak isn't always a crash; it's often poor **performance** and battery drain.
-*   Explain that the GC has to work harder to find space in a fragmented heap.
+### Q2. Does a Memory Leak always lead to an `OutOfMemoryError`?
+**Answer:**
+*   **No.** If the leak is small and the user closes the app before the heap is exhausted, it may never cause a crash.
+*   The real symptom is **GC Thrashing** — the Garbage Collector runs more frequently trying to reclaim space in a fragmented heap. This consumes CPU cycles and causes UI stutters (Jank).
+*   A memory leak also delays the LMK (Low Memory Killer) from reclaiming the app's process memory, harming the whole device.
+*   Use **LeakCanary** to detect leaks in development. Check for leaked Activity/Fragment references held by static fields or long-lived coroutines.
 
 ---
 
-### Q3. [What If] What if you perform a Bitmap transformation on the Main Thread?
-**The Scenario:**
-*   Bitmaps are memory-intensive. Processing them involves heavy CPU work.
-*   If this takes >16ms, the UI thread misses the VSync signal.
-*   The user sees "Jank" or an "ANR" (Application Not Responding) dialog if the block lasts >5 seconds.
-
-**How to Answer:**
-*   State the "Main Thread is for UI only" rule.
-*   Suggest moving the work to a Background Thread (Coroutines/Dispatchers.Default).
-*   Mention that Bitmaps should be scaled down using `inSampleSize` before loading to save memory.
+### Q3. What if you perform a Bitmap transformation on the Main Thread?
+**Answer:**
+*   Bitmap operations (decode, scale, blur) are **CPU and memory intensive**.
+*   If the operation takes more than **16ms**, the UI thread misses its VSync signal — the user sees a dropped frame (Jank).
+*   If it blocks for more than **5 seconds**, the system displays an **ANR (Application Not Responding)** dialog.
+*   **Fix:** Move bitmap work to `Dispatchers.Default` (CPU-bound coroutine) or use Glide/Coil which handle this automatically.
+*   Always scale bitmaps down using `BitmapOptions.inSampleSize` before loading into memory to avoid `OutOfMemoryError`.
