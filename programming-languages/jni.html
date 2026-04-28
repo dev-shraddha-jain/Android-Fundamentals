@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JNI — Java Native Interface</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: #2a2a3a;
+    --accent: #ff4d00;
+    --accent2: #00e5ff;
+    --accent3: #b8ff57;
+    --text: #e8e8f0;
+    --muted: #6b6b88;
+    --java: #f89820;
+    --c: #00aaff;
+    --jvm: #b8ff57;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,77,0,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,77,0,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 2;
+    padding: 60px 40px 40px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(255,77,0,0.05) 0%, transparent 100%);
+  }
+
+  .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(56px, 10vw, 120px);
+    line-height: 0.9;
+    letter-spacing: 2px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  h1 span {
+    color: var(--accent);
+    display: block;
+  }
+
+  .subtitle {
+    font-size: 16px;
+    color: var(--muted);
+    font-weight: 300;
+    margin-top: 16px;
+    max-width: 600px;
+    line-height: 1.6;
+  }
+
+  .main {
+    position: relative;
+    z-index: 2;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  /* Tab navigation */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 40px;
+    overflow-x: auto;
+    padding-bottom: 0;
+  }
+
+  .tab {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 12px 20px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+    position: relative;
+    transition: color 0.2s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+  }
+
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* Panels */
+  .panel { display: none; animation: fadeIn 0.3s ease; }
+  .panel.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Section headers */
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: rgba(255,77,0,0.3); }
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .step-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    color: var(--accent);
+    line-height: 1;
+    min-width: 36px;
+  }
+
+  .card-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent2);
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  .card-body {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.7;
+    padding-left: 52px;
+  }
+
+  .card-body ul {
+    list-style: none;
+    margin-top: 8px;
+  }
+
+  .card-body ul li {
+    padding: 4px 0;
+    padding-left: 16px;
+    position: relative;
+    color: #c8c8d8;
+    font-size: 13.5px;
+  }
+
+  .card-body ul li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 11px;
+    top: 6px;
+  }
+
+  /* Architecture diagram */
+  .arch-diagram {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 32px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .arch-layers {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .layer {
+    border-radius: 4px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .layer:hover {
+    transform: translateX(4px);
+    box-shadow: -3px 0 0 var(--accent);
+  }
+
+  .layer.java-layer { background: rgba(248,152,32,0.12); border: 1px solid rgba(248,152,32,0.3); }
+  .layer.jni-layer { background: rgba(255,77,0,0.18); border: 2px solid var(--accent); }
+  .layer.native-layer { background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.3); }
+  .layer.os-layer { background: rgba(184,255,87,0.06); border: 1px solid rgba(184,255,87,0.2); }
+
+  .layer-icon { font-size: 24px; }
+  .layer-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 1px;
+  }
+  .layer-desc {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .layer.java-layer .layer-name { color: var(--java); }
+  .layer.jni-layer .layer-name { color: var(--accent); }
+  .layer.native-layer .layer-name { color: var(--c); }
+  .layer.os-layer .layer-name { color: var(--jvm); }
+
+  .arrow-connector {
+    text-align: center;
+    color: var(--muted);
+    font-size: 20px;
+    margin: -4px 0;
+  }
+
+  /* Code blocks */
+  .code-block {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .lang-badge {
+    background: var(--accent);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 9px;
+  }
+
+  .lang-badge.c { background: var(--c); }
+  .lang-badge.sh { background: var(--jvm); color: #000; }
+
+  pre {
+    padding: 20px;
+    overflow-x: auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    color: #c8c8d8;
+  }
+
+  .kw { color: #ff7b7b; }
+  .type { color: var(--java); }
+  .fn { color: #7dd6f9; }
+  .str { color: #98d9a0; }
+  .cm { color: var(--muted); font-style: italic; }
+  .num { color: #b8ff57; }
+
+  /* Flow steps */
+  .flow-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .flow-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .flow-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s;
+  }
+
+  .flow-card:hover::before { transform: scaleX(1); }
+  .flow-card:hover { border-color: rgba(255,77,0,0.2); }
+
+  .flow-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: rgba(255,77,0,0.15);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .flow-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent2);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  .flow-text { font-size: 13px; color: #a8a8c0; line-height: 1.6; }
+
+  /* Use cases */
+  .use-cases {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .use-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+    transition: all 0.2s;
+  }
+
+  .use-card:hover {
+    background: rgba(255,77,0,0.05);
+    border-color: rgba(255,77,0,0.3);
+  }
+
+  .use-icon { font-size: 28px; margin-bottom: 12px; }
+  .use-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+    letter-spacing: 0.5px;
+  }
+  .use-text { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* Pitfalls */
+  .pitfall {
+    background: rgba(255,77,0,0.05);
+    border: 1px solid rgba(255,77,0,0.2);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+
+  .pitfall-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .pitfall-text { font-size: 13px; color: #b0b0c8; line-height: 1.6; }
+
+  /* Interactive simulator */
+  .simulator {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .sim-header {
+    padding: 16px 24px;
+    background: rgba(255,77,0,0.08);
+    border-bottom: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .sim-body { padding: 24px; }
+
+  .sim-steps {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+
+  .sim-step-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 2px;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .sim-step-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .sim-step-btn:hover:not(.active) {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .sim-content {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 24px;
+    min-height: 180px;
+  }
+
+  .sim-step-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .sim-step-desc {
+    font-size: 13.5px;
+    color: #b0b0c8;
+    line-height: 1.7;
+    margin-bottom: 12px;
+  }
+
+  .sim-cmd {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent3);
+    background: rgba(184,255,87,0.05);
+    border: 1px solid rgba(184,255,87,0.15);
+    padding: 8px 14px;
+    border-radius: 2px;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  /* Data types table */
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+  }
+
+  th {
+    background: rgba(255,77,0,0.1);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    text-align: left;
+    color: var(--accent);
+    letter-spacing: 1px;
+    font-size: 10px;
+    text-transform: uppercase;
+  }
+
+  td {
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    color: #c0c0d8;
+  }
+
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .jtype { color: var(--java); }
+  .ctype { color: var(--c); }
+  .jnitype { color: var(--accent2); }
+
+  footer {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="tag">Deep Dive</span>
+  <h1>JNI<span>Java Native Interface</span></h1>
+  <p class="subtitle">The bridge that lets Java bytecode call — and be called by — native code written in C, C++, or Assembly. A deep, interactive reference.</p>
+</header>
+
+<div class="main">
+
+  <!-- TAB NAV -->
+  <div class="tabs">
+    <button class="tab active" onclick="showPanel('overview', this)">Overview</button>
+    <button class="tab" onclick="showPanel('architecture', this)">Architecture</button>
+    <button class="tab" onclick="showPanel('mechanism', this)">Working Mechanism</button>
+    <button class="tab" onclick="showPanel('code', this)">Code Walkthrough</button>
+    <button class="tab" onclick="showPanel('types', this)">Type Mapping</button>
+    <button class="tab" onclick="showPanel('usecases', this)">Use Cases</button>
+    <button class="tab" onclick="showPanel('pitfalls', this)">Pitfalls</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="panel-overview" class="panel active">
+    <div class="section-title">What is JNI?</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-num">01</div>
+        <div>
+          <div class="card-title">DEFINITION</div>
+        </div>
+      </div>
+      <div class="card-body">
+        JNI (Java Native Interface) is a programming framework that enables Java code running inside the JVM to call, and be called by, native applications and libraries written in languages like C, C++, or Assembly.
+        <ul>
+          <li>Part of the Java Development Kit (JDK) since JDK 1.1 (1997)</li>
+          <li>Allows Java programs to interact directly with OS-level APIs</li>
+          <li>Provides a standard binary interface for JVM-to-native communication</li>
+          <li>Works across all JVM implementations — HotSpot, GraalVM, IBM J9, etc.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-num">02</div>
+        <div><div class="card-title">WHY JNI EXISTS</div></div>
+      </div>
+      <div class="card-body">
+        Java's "Write Once Run Anywhere" model runs on a sandboxed VM, which abstracts away hardware. But sometimes you NEED the hardware.
+        <ul>
+          <li>Access legacy C/C++ libraries not available in Java</li>
+          <li>Perform time-critical operations (real-time signal processing, graphics)</li>
+          <li>Interface with OS internals (hardware drivers, kernel APIs)</li>
+          <li>Execute platform-specific code (Windows COM objects, Linux ioctl)</li>
+          <li>Reuse highly optimized, battle-tested native libraries (OpenSSL, BLAS, etc.)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-num">03</div>
+        <div><div class="card-title">JNI vs ALTERNATIVES</div></div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li><strong style="color:#7dd6f9">JNI</strong> — Built into JVM, full power, but complex and crash-prone</li>
+          <li><strong style="color:#7dd6f9">JNA (Java Native Access)</strong> — Easier, reflection-based, no C headers needed, slower</li>
+          <li><strong style="color:#7dd6f9">Panama / FFM API (Java 22+)</strong> — Modern replacement for JNI, safer, faster</li>
+          <li><strong style="color:#7dd6f9">JNDI</strong> — Completely different: Java Naming and Directory Interface (NOT native code)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <div id="panel-architecture" class="panel">
+    <div class="section-title">Architecture</div>
+
+    <div class="arch-diagram">
+      <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:20px;text-align:center;text-transform:uppercase;">JNI Layer Stack — Click any layer</div>
+      <div class="arch-layers">
+        <div class="layer java-layer" onclick="showLayerInfo('java')">
+          <div class="layer-icon">☕</div>
+          <div>
+            <div class="layer-name">Java Application Layer</div>
+            <div class="layer-desc">MyClass.java · javac · .class bytecode · native keyword</div>
+          </div>
+        </div>
+        <div class="arrow-connector">⬇ JNI Call ⬆</div>
+        <div class="layer jni-layer" onclick="showLayerInfo('jni')">
+          <div class="layer-icon">⚡</div>
+          <div>
+            <div class="layer-name">JNI Bridge Layer</div>
+            <div class="layer-desc">JNIEnv* · javah/javac -h · jni.h · Type marshaling</div>
+          </div>
+        </div>
+        <div class="arrow-connector">⬇ dlopen / LoadLibrary ⬆</div>
+        <div class="layer native-layer" onclick="showLayerInfo('native')">
+          <div class="layer-icon">⚙</div>
+          <div>
+            <div class="layer-name">Native Library Layer</div>
+            <div class="layer-desc">libmylib.so / mylib.dll · GCC/Clang/MSVC · .so/.dll/.dylib</div>
+          </div>
+        </div>
+        <div class="arrow-connector">⬇ System Calls ⬆</div>
+        <div class="layer os-layer" onclick="showLayerInfo('os')">
+          <div class="layer-icon">🖥</div>
+          <div>
+            <div class="layer-name">Operating System / Hardware</div>
+            <div class="layer-desc">Linux / Windows / macOS · CPU · GPU · Kernel APIs</div>
+          </div>
+        </div>
+      </div>
+      <div id="layer-info" style="margin-top:20px;padding:16px;background:rgba(255,77,0,0.05);border:1px solid rgba(255,77,0,0.15);border-radius:4px;display:none;font-size:13px;color:#b8b8d0;line-height:1.6;"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-num">KEY</div>
+        <div><div class="card-title">CORE COMPONENTS</div></div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li><strong style="color:#7dd6f9">JNIEnv*</strong> — Pointer to a JNI function table; every native function receives this as its first argument. It provides ~200 functions for manipulating Java objects from C.</li>
+          <li><strong style="color:#7dd6f9">JavaVM*</strong> — Represents the JVM instance itself. Used to attach/detach native threads and to create a JVM from native code (Invocation API).</li>
+          <li><strong style="color:#7dd6f9">jni.h</strong> — C header file bundled with the JDK that defines all JNI types, structs, and macros.</li>
+          <li><strong style="color:#7dd6f9">native keyword</strong> — Marks a Java method as implemented in native code; no body in Java.</li>
+          <li><strong style="color:#7dd6f9">System.loadLibrary()</strong> — Dynamically loads the compiled native shared library at runtime.</li>
+          <li><strong style="color:#7dd6f9">Name mangling</strong> — JNI function names follow a strict pattern: Java_packageName_ClassName_methodName</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- MECHANISM -->
+  <div id="panel-mechanism" class="panel">
+    <div class="section-title">Working Mechanism</div>
+
+    <div class="flow-grid">
+      <div class="flow-card">
+        <div class="flow-num">01</div>
+        <div class="flow-title">DECLARE NATIVE METHOD</div>
+        <div class="flow-text">In Java, mark a method with the <code style="color:var(--accent)">native</code> keyword and no body. This tells the JVM that the implementation lives outside the JVM in a native shared library.</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">02</div>
+        <div class="flow-title">COMPILE TO BYTECODE</div>
+        <div class="flow-text">Run <code style="color:var(--accent)">javac</code> normally. The .class file contains the native method signature but no bytecode body for it — just a flag indicating it's native.</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">03</div>
+        <div class="flow-title">GENERATE C HEADER</div>
+        <div class="flow-text">Run <code style="color:var(--accent)">javac -h .</code> (or legacy <code style="color:var(--accent)">javah</code>) to auto-generate a .h header file declaring the exact C function signatures with mangled names.</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">04</div>
+        <div class="flow-title">IMPLEMENT IN C/C++</div>
+        <div class="flow-text">Write the native function in C/C++ matching the exact signature from the header. Use the <code style="color:var(--accent)">JNIEnv*</code> pointer to interact with Java objects, call Java methods, throw exceptions, etc.</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">05</div>
+        <div class="flow-title">COMPILE TO SHARED LIB</div>
+        <div class="flow-text">Compile the C code into a platform-specific shared library: <code style="color:var(--accent)">.so</code> on Linux, <code style="color:var(--accent)">.dll</code> on Windows, <code style="color:var(--accent)">.dylib</code> on macOS. Must include JDK's include/ path.</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">06</div>
+        <div class="flow-title">LOAD AT RUNTIME</div>
+        <div class="flow-text">Java calls <code style="color:var(--accent)">System.loadLibrary("libname")</code> in a static block. The JVM uses OS dynamic linker (dlopen/LoadLibrary) to load the .so/.dll into process memory.</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">07</div>
+        <div class="flow-title">SYMBOL RESOLUTION</div>
+        <div class="flow-text">When the native method is first called, JVM looks up the mangled symbol in the loaded library. If found, it binds the Java method to that C function address — this is called "linking".</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">08</div>
+        <div class="flow-title">CALL DISPATCH</div>
+        <div class="flow-text">At the call site, JVM pushes arguments onto the native stack (with type conversion), jumps to the C function, executes it, then marshals the return value back to Java types.</div>
+      </div>
+    </div>
+
+    <!-- Simulator -->
+    <div class="simulator">
+      <div class="sim-header">⚡ Interactive Execution Simulator</div>
+      <div class="sim-body">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:12px;letter-spacing:1px;">STEP THROUGH A JNI CALL:</div>
+        <div class="sim-steps">
+          <button class="sim-step-btn active" onclick="simStep(0, this)">Java Call</button>
+          <button class="sim-step-btn" onclick="simStep(1, this)">JVM Lookup</button>
+          <button class="sim-step-btn" onclick="simStep(2, this)">Stack Frame</button>
+          <button class="sim-step-btn" onclick="simStep(3, this)">Type Marshal</button>
+          <button class="sim-step-btn" onclick="simStep(4, this)">C Execution</button>
+          <button class="sim-step-btn" onclick="simStep(5, this)">Return</button>
+          <button class="sim-step-btn" onclick="simStep(6, this)">GC Refs</button>
+        </div>
+        <div class="sim-content" id="sim-content">
+          <div class="sim-step-title">JAVA CALL SITE</div>
+          <div class="sim-step-desc">Java code invokes a method declared as <code style="color:var(--accent)">native</code>. From the Java developer's perspective, this looks like any other method call. The JVM intercepts it at the bytecode level via the <code style="color:var(--accent)">invokevirtual</code> or <code style="color:var(--accent)">invokestatic</code> opcode — but routes execution differently when the method flag is NATIVE.</div>
+          <div class="sim-cmd">int result = myObj.computeNative(42);</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CODE WALKTHROUGH -->
+  <div id="panel-code" class="panel">
+    <div class="section-title">Code Walkthrough</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-num">1</div>
+        <div><div class="card-title">JAVA SIDE — DECLARE NATIVE METHOD</div></div>
+      </div>
+      <div class="card-body">
+        <div class="code-block">
+          <div class="code-header"><span>HelloJNI.java</span><span class="lang-badge">JAVA</span></div>
+          <pre><span class="kw">public class</span> <span class="type">HelloJNI</span> {
+
+    <span class="cm">// Declare native method — no body!</span>
+    <span class="kw">public native</span> <span class="type">String</span> <span class="fn">greet</span>(<span class="type">String</span> name);
+
+    <span class="kw">public native int</span> <span class="fn">add</span>(<span class="kw">int</span> a, <span class="kw">int</span> b);
+
+    <span class="cm">// Load the native shared library on class load</span>
+    <span class="kw">static</span> {
+        System.<span class="fn">loadLibrary</span>(<span class="str">"hello"</span>); <span class="cm">// loads libhello.so / hello.dll</span>
+    }
+
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="type">String</span>[] args) {
+        <span class="type">HelloJNI</span> obj = <span class="kw">new</span> <span class="type">HelloJNI</span>();
+        System.out.<span class="fn">println</span>(obj.<span class="fn">greet</span>(<span class="str">"World"</span>));
+        System.out.<span class="fn">println</span>(obj.<span class="fn">add</span>(<span class="num">3</span>, <span class="num">4</span>));
+    }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-num">2</div>
+        <div><div class="card-title">GENERATE HEADER — javac -h</div></div>
+      </div>
+      <div class="card-body">
+        <div class="code-block">
+          <div class="code-header"><span>Terminal</span><span class="lang-badge sh">SHELL</span></div>
+          <pre>javac -h . HelloJNI.java
+<span class="cm"># Generates: HelloJNI.h</span></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-header"><span>HelloJNI.h (auto-generated)</span><span class="lang-badge c">C</span></div>
+          <pre><span class="cm">/* DO NOT EDIT THIS FILE - it is machine generated */</span>
+<span class="kw">#include</span> <span class="str">&lt;jni.h&gt;</span>
+
+<span class="cm">/* Name mangling: Java_ClassName_methodName */</span>
+JNIEXPORT <span class="type">jstring</span> JNICALL
+<span class="fn">Java_HelloJNI_greet</span>(<span class="type">JNIEnv</span> *env, <span class="type">jobject</span> obj, <span class="type">jstring</span> name);
+
+JNIEXPORT <span class="type">jint</span> JNICALL
+<span class="fn">Java_HelloJNI_add</span>(<span class="type">JNIEnv</span> *env, <span class="type">jobject</span> obj, <span class="type">jint</span> a, <span class="type">jint</span> b);</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-num">3</div>
+        <div><div class="card-title">IMPLEMENT IN C</div></div>
+      </div>
+      <div class="card-body">
+        <div class="code-block">
+          <div class="code-header"><span>HelloJNI.c</span><span class="lang-badge c">C</span></div>
+          <pre><span class="kw">#include</span> <span class="str">&lt;jni.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;string.h&gt;</span>
+<span class="kw">#include</span> <span class="str">"HelloJNI.h"</span>
+
+<span class="cm">// JNIEnv* — the interface pointer (function table)
+// jobject  — the Java object that called this (this)</span>
+
+JNIEXPORT <span class="type">jstring</span> JNICALL
+<span class="fn">Java_HelloJNI_greet</span>(<span class="type">JNIEnv</span> *env, <span class="type">jobject</span> obj, <span class="type">jstring</span> name) {
+    <span class="cm">// Convert jstring → C string</span>
+    <span class="kw">const char</span> *nameStr = (*env)-><span class="fn">GetStringUTFChars</span>(env, name, <span class="num">NULL</span>);
+
+    <span class="kw">char</span> buf[<span class="num">256</span>];
+    <span class="fn">snprintf</span>(buf, <span class="kw">sizeof</span>(buf), <span class="str">"Hello from C, %s!"</span>, nameStr);
+
+    <span class="cm">// IMPORTANT: Release the C string to avoid memory leak</span>
+    (*env)-><span class="fn">ReleaseStringUTFChars</span>(env, name, nameStr);
+
+    <span class="cm">// Convert C string → jstring and return</span>
+    <span class="kw">return</span> (*env)-><span class="fn">NewStringUTF</span>(env, buf);
+}
+
+JNIEXPORT <span class="type">jint</span> JNICALL
+<span class="fn">Java_HelloJNI_add</span>(<span class="type">JNIEnv</span> *env, <span class="type">jobject</span> obj, <span class="type">jint</span> a, <span class="type">jint</span> b) {
+    <span class="kw">return</span> a + b; <span class="cm">// jint is typedef'd to int32_t</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-num">4</div>
+        <div><div class="card-title">COMPILE SHARED LIBRARY</div></div>
+      </div>
+      <div class="card-body">
+        <div class="code-block">
+          <div class="code-header"><span>Linux/macOS</span><span class="lang-badge sh">SHELL</span></div>
+          <pre><span class="cm"># Linux</span>
+gcc -shared -fPIC \
+  -I$JAVA_HOME/include \
+  -I$JAVA_HOME/include/linux \
+  -o libhello.so HelloJNI.c
+
+<span class="cm"># macOS</span>
+gcc -dynamiclib \
+  -I$JAVA_HOME/include \
+  -I$JAVA_HOME/include/darwin \
+  -o libhello.dylib HelloJNI.c</pre>
+        </div>
+        <div class="code-block">
+          <div class="code-header"><span>Run</span><span class="lang-badge sh">SHELL</span></div>
+          <pre>java -Djava.library.path=. HelloJNI
+<span class="cm"># Output: Hello from C, World!</span>
+<span class="cm"># Output: 7</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TYPE MAPPING -->
+  <div id="panel-types" class="panel">
+    <div class="section-title">Type Mapping</div>
+
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-body" style="padding-left:0;">
+        JNI defines its own set of types that map between Java types and C types. Primitive types are passed by value; objects (arrays, strings, classes) are passed as opaque references.
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Java Type</th>
+            <th>JNI Type</th>
+            <th>C Type</th>
+            <th>Size</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="jtype">boolean</td><td class="jnitype">jboolean</td><td class="ctype">uint8_t</td><td>8-bit</td></tr>
+          <tr><td class="jtype">byte</td><td class="jnitype">jbyte</td><td class="ctype">int8_t</td><td>8-bit</td></tr>
+          <tr><td class="jtype">char</td><td class="jnitype">jchar</td><td class="ctype">uint16_t</td><td>16-bit</td></tr>
+          <tr><td class="jtype">short</td><td class="jnitype">jshort</td><td class="ctype">int16_t</td><td>16-bit</td></tr>
+          <tr><td class="jtype">int</td><td class="jnitype">jint</td><td class="ctype">int32_t</td><td>32-bit</td></tr>
+          <tr><td class="jtype">long</td><td class="jnitype">jlong</td><td class="ctype">int64_t</td><td>64-bit</td></tr>
+          <tr><td class="jtype">float</td><td class="jnitype">jfloat</td><td class="ctype">float</td><td>32-bit IEEE</td></tr>
+          <tr><td class="jtype">double</td><td class="jnitype">jdouble</td><td class="ctype">double</td><td>64-bit IEEE</td></tr>
+          <tr><td class="jtype">void</td><td class="jnitype">void</td><td class="ctype">void</td><td>—</td></tr>
+          <tr><td class="jtype">Object</td><td class="jnitype">jobject</td><td class="ctype">void* (opaque)</td><td>ptr</td></tr>
+          <tr><td class="jtype">String</td><td class="jnitype">jstring</td><td class="ctype">void* (opaque)</td><td>ptr</td></tr>
+          <tr><td class="jtype">Class</td><td class="jnitype">jclass</td><td class="ctype">void* (opaque)</td><td>ptr</td></tr>
+          <tr><td class="jtype">int[]</td><td class="jnitype">jintArray</td><td class="ctype">void* (opaque)</td><td>ptr</td></tr>
+          <tr><td class="jtype">Object[]</td><td class="jnitype">jobjectArray</td><td class="ctype">void* (opaque)</td><td>ptr</td></tr>
+          <tr><td class="jtype">Throwable</td><td class="jnitype">jthrowable</td><td class="ctype">void* (opaque)</td><td>ptr</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+      <div class="card-header">
+        <div><div class="card-title">REFERENCE TYPES — LOCAL vs GLOBAL</div></div>
+      </div>
+      <div class="card-body" style="padding-left:0;">
+        <ul>
+          <li><strong style="color:#7dd6f9">Local References</strong> — Created during a native call; automatically freed when the native method returns. Limited to 16 by default (can expand with EnsureLocalCapacity).</li>
+          <li><strong style="color:#7dd6f9">Global References</strong> — Created with <code style="color:var(--accent)">NewGlobalRef()</code>; persist until explicitly deleted with <code style="color:var(--accent)">DeleteGlobalRef()</code>. Required for objects stored in C globals.</li>
+          <li><strong style="color:#7dd6f9">Weak Global References</strong> — Allow GC to collect the object; check for NULL before use. Created with <code style="color:var(--accent)">NewWeakGlobalRef()</code>.</li>
+          <li><strong style="color:var(--accent)">WARNING:</strong> Storing a local reference in a C global variable causes a crash. Always promote to global ref if the object must outlive the native call.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- USE CASES -->
+  <div id="panel-usecases" class="panel">
+    <div class="section-title">Real-World Use Cases</div>
+    <div class="use-cases">
+      <div class="use-card">
+        <div class="use-icon">🤖</div>
+        <div class="use-title">ANDROID DEVELOPMENT</div>
+        <div class="use-text">Android NDK uses JNI extensively. Game engines (Unity, Unreal), OpenGL/Vulkan renderers, and audio DSP run as native code called from Java/Kotlin via JNI.</div>
+      </div>
+      <div class="use-card">
+        <div class="use-icon">🔐</div>
+        <div class="use-title">CRYPTOGRAPHY</div>
+        <div class="use-text">OpenSSL, BoringSSL, and hardware security modules (HSMs) are accessed from Java via JNI for performance-critical TLS, encryption, and key operations.</div>
+      </div>
+      <div class="use-card">
+        <div class="use-icon">🧠</div>
+        <div class="use-title">MACHINE LEARNING</div>
+        <div class="use-text">TensorFlow Java API, PyTorch Mobile Java, and Intel MKL use JNI to call highly optimized C++/CUDA kernels for matrix operations and inference.</div>
+      </div>
+      <div class="use-card">
+        <div class="use-icon">🗄️</div>
+        <div class="use-title">DATABASES</div>
+        <div class="use-text">SQLite (Android), RocksDB Java API, and LevelDB use JNI. The C storage engine is called from Java for embedded or high-throughput scenarios.</div>
+      </div>
+      <div class="use-card">
+        <div class="use-icon">🎮</div>
+        <div class="use-title">GAME ENGINES</div>
+        <div class="use-text">LWJGL (Lightweight Java Game Library) wraps OpenGL, OpenAL, and Vulkan via JNI, enabling Java games to call GPU and audio hardware directly.</div>
+      </div>
+      <div class="use-card">
+        <div class="use-icon">🖥️</div>
+        <div class="use-title">OS & HARDWARE ACCESS</div>
+        <div class="use-text">Java's own class library (java.io, java.net, java.lang) uses JNI internally to call OS system calls — file I/O, sockets, process management are all JNI under the hood.</div>
+      </div>
+      <div class="use-card">
+        <div class="use-icon">📡</div>
+        <div class="use-title">LEGACY SYSTEM INTEGRATION</div>
+        <div class="use-text">Enterprises wrap decades-old C/COBOL-generated shared libraries behind a Java API using JNI, avoiding costly rewrites while adding modern tooling.</div>
+      </div>
+      <div class="use-card">
+        <div class="use-icon">⚡</div>
+        <div class="use-title">HIGH PERFORMANCE COMPUTING</div>
+        <div class="use-text">Apache Spark, Hadoop, and Kafka use JNI for native memory management (off-heap buffers), bypassing GC for large data pipelines.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PITFALLS -->
+  <div id="panel-pitfalls" class="panel">
+    <div class="section-title">Pitfalls & Best Practices</div>
+
+    <div class="pitfall">
+      <div class="pitfall-title">💀 CRASH THE JVM</div>
+      <div class="pitfall-text">A segfault in C code kills the entire JVM process — no exception, no stack trace. Java's safety guarantees evaporate the moment you cross the JNI boundary. Always test native code independently with tools like Valgrind or AddressSanitizer before integrating.</div>
+    </div>
+
+    <div class="pitfall">
+      <div class="pitfall-title">🔴 MEMORY LEAKS — NOT RELEASING STRINGS</div>
+      <div class="pitfall-text">Every call to <code>GetStringUTFChars()</code>, <code>GetByteArrayElements()</code>, etc. MUST be paired with the corresponding Release call. Missing it leaks native memory that the GC cannot reclaim. Use try/finally patterns or RAII in C++.</div>
+    </div>
+
+    <div class="pitfall">
+      <div class="pitfall-title">🔴 LOCAL REFERENCE OVERFLOW</div>
+      <div class="pitfall-text">Creating more than 16 local references in a loop (e.g., building a large array of jobjects) will crash. Call <code>DeleteLocalRef()</code> inside the loop or call <code>EnsureLocalCapacity(n)</code> before the loop.</div>
+    </div>
+
+    <div class="pitfall">
+      <div class="pitfall-title">🔴 THREAD SAFETY — JNIEnv IS NOT SHAREABLE</div>
+      <div class="pitfall-text">Each thread has its own JNIEnv*. You CANNOT share it between threads. Native threads must call <code>JavaVM->AttachCurrentThread()</code> to get their own JNIEnv, and <code>DetachCurrentThread()</code> before the thread exits.</div>
+    </div>
+
+    <div class="pitfall">
+      <div class="pitfall-title">⚠️ PERFORMANCE OVERHEAD</div>
+      <div class="pitfall-text">JNI calls have overhead: argument marshaling, thread transition (Java→Native mode), safepoint checks, and potential GC pauses for object pinning. For trivial operations, JNI can be slower than pure Java. Batch work into fewer, larger native calls.</div>
+    </div>
+
+    <div class="pitfall">
+      <div class="pitfall-title">⚠️ PLATFORM PORTABILITY BROKEN</div>
+      <div class="pitfall-text">JNI destroys "Write Once Run Anywhere". You must compile and distribute platform-specific binaries for every target OS × architecture (Linux/x64, Linux/ARM64, Windows/x64, macOS/ARM64, etc.).</div>
+    </div>
+
+    <div class="pitfall">
+      <div class="pitfall-title">⚠️ EXCEPTION HANDLING IS MANUAL</div>
+      <div class="pitfall-text">C doesn't propagate Java exceptions automatically. After calling a JNI function that can throw, you must check <code>ExceptionCheck()</code> or <code>ExceptionOccurred()</code> and handle it. Ignoring a pending exception and calling more JNI functions leads to undefined behavior.</div>
+    </div>
+
+    <div class="pitfall" style="border-left-color: var(--accent3); border-color: rgba(184,255,87,0.2); background: rgba(184,255,87,0.03);">
+      <div class="pitfall-title" style="color: var(--accent3)">✅ BEST PRACTICE — MINIMIZE CROSSING BOUNDARY</div>
+      <div class="pitfall-text">Each Java↔Native boundary crossing has overhead. Prefer doing all heavy computation on one side, then returning a single result. Avoid chatty JNI patterns (calling Java from C in a loop). Keep the JNI layer thin — let Java orchestrate, let C compute.</div>
+    </div>
+
+    <div class="pitfall" style="border-left-color: var(--accent2); border-color: rgba(0,229,255,0.2); background: rgba(0,229,255,0.03);">
+      <div class="pitfall-title" style="color: var(--accent2)">✅ CONSIDER PANAMA (FFM API) FOR NEW CODE</div>
+      <div class="pitfall-text">Java 22+ ships the Foreign Function & Memory (FFM) API as a stable replacement. It's safer (no JVM crashes from bad pointers), faster (no JNI overhead), and doesn't require writing C header files. Use JNI only when targeting older JDKs or Android.</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>JNI — JAVA NATIVE INTERFACE &nbsp;·&nbsp; DEEP REFERENCE &nbsp;·&nbsp; BUILT WITH CLAUDE</footer>
+
+<script>
+  // Tab switching
+  function showPanel(id, btn) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // Layer info
+  const layerData = {
+    java: {
+      title: 'Java Application Layer',
+      text: 'This is where you write regular Java code. You declare methods with the <code style="color:#ff4d00">native</code> keyword — no implementation body. Compile with <code style="color:#ff4d00">javac</code>. At runtime, calling a native method triggers a JVM dispatch to the native binding. Everything here is type-safe and GC-managed.'
+    },
+    jni: {
+      title: 'JNI Bridge Layer',
+      text: 'The bridge layer handles type conversion (Java types ↔ JNI types ↔ C types), manages local/global object references, facilitates exception passing across the boundary, and enforces the calling convention. The <code style="color:#ff4d00">JNIEnv*</code> function table gives C code access to ~200 JVM operations.'
+    },
+    native: {
+      title: 'Native Library Layer',
+      text: 'Your compiled C/C++ shared library (.so/.dll/.dylib). Loaded at runtime by the OS dynamic linker. The JVM resolves Java native method symbols to C function addresses using name mangling. Native code executes without GC protection — full speed, full responsibility.'
+    },
+    os: {
+      title: 'Operating System / Hardware',
+      text: 'The reason JNI exists. Native code can make raw system calls, talk to device drivers, use platform APIs (Win32, POSIX, macOS CoreFoundation), access GPU via CUDA/Vulkan, use SIMD intrinsics, or interface with hardware peripherals — none of which are accessible from pure Java bytecode.'
+    }
+  };
+
+  function showLayerInfo(key) {
+    const el = document.getElementById('layer-info');
+    const d = layerData[key];
+    el.style.display = 'block';
+    el.innerHTML = `<strong style="color:#ff4d00;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;">${d.title.toUpperCase()}</strong><br><br>${d.text}`;
+  }
+
+  // Simulator
+  const simSteps = [
+    {
+      title: 'JAVA CALL SITE',
+      desc: 'Java code invokes a method declared as <code style="color:#ff4d00">native</code>. The JVM bytecode uses <code style="color:#ff4d00">invokevirtual</code> or <code style="color:#ff4d00">invokestatic</code> opcode — but the JVM detects the NATIVE flag and routes to the JNI dispatch path instead of bytecode execution.',
+      cmd: 'int result = myObj.computeNative(42);'
+    },
+    {
+      title: 'JVM NATIVE LOOKUP',
+      desc: 'The JVM searches the loaded native libraries for a symbol matching the mangled name pattern. If not found, throws <code style="color:#ff4d00">UnsatisfiedLinkError</code>. Once found, the binding is cached — subsequent calls skip the lookup and go directly to the C function pointer.',
+      cmd: 'Symbol: Java_com_example_MyClass_computeNative'
+    },
+    {
+      title: 'NATIVE STACK FRAME',
+      desc: 'JVM transitions the current thread from "Java mode" to "Native mode". This is a safepoint — the GC knows this thread is in native code and won\'t try to stop it for GC pauses (it just waits at re-entry). A native stack frame is set up using the system\'s calling convention (e.g., System V AMD64 ABI on Linux).',
+      cmd: 'Thread state: IN_JAVA → IN_NATIVE'
+    },
+    {
+      title: 'TYPE MARSHALING',
+      desc: 'Java primitive types (int, double, etc.) are copied by value directly — no conversion needed. Reference types (String, arrays, objects) are NOT copied; instead, an opaque handle (a <code style="color:#ff4d00">jobject</code>) is passed. The handle points into the JVM\'s managed heap via a local reference table.',
+      cmd: 'jint a = 42; // direct copy\njstring s = handle → heap'
+    },
+    {
+      title: 'C FUNCTION EXECUTES',
+      desc: 'Your C code runs natively on the CPU. It can call OS APIs, use SIMD, allocate native memory (malloc), or call other C libraries. It can also call BACK into Java via the JNIEnv* function table — to invoke Java methods, access fields, create objects, or throw exceptions.',
+      cmd: 'return (*env)->NewStringUTF(env, "result");'
+    },
+    {
+      title: 'RETURN TO JAVA',
+      desc: 'When the native function returns, the JVM transitions back to "Java mode". The return value (a JNI type) is converted back to the Java type. If a Java exception was thrown during the native call (via ThrowNew), it is re-raised in Java at this point. Local references are freed.',
+      cmd: 'Thread state: IN_NATIVE → IN_JAVA'
+    },
+    {
+      title: 'GC REFERENCE CLEANUP',
+      desc: 'Local references created during the native call are automatically invalidated after the method returns. Any <code style="color:#ff4d00">Global References</code> you created persist until you explicitly call <code style="color:#ff4d00">DeleteGlobalRef()</code>. Forgetting to do so = memory leak. The GC cannot collect objects with live global references.',
+      cmd: '(*env)->DeleteGlobalRef(env, globalRef);'
+    }
+  ];
+
+  function simStep(idx, btn) {
+    document.querySelectorAll('.sim-step-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const s = simSteps[idx];
+    document.getElementById('sim-content').innerHTML = `
+      <div class="sim-step-title">${s.title}</div>
+      <div class="sim-step-desc">${s.desc}</div>
+      <div class="sim-cmd">${s.cmd}</div>
+    `;
+  }
+</script>
+</body>
+</html>
