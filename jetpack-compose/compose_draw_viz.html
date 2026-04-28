@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Compose Draw Mechanism</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--purple:#7c3aed;--cyan:#06b6d4;--amber:#f59e0b;--green:#22c55e;--red:#ef4444;--text:#e6edf3;--muted:#8b949e;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  h1{text-align:center;padding:36px 20px 6px;font-size:1.7rem;font-weight:800;background:linear-gradient(135deg,#7c3aed,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .sub{text-align:center;color:var(--muted);font-size:.88rem;margin-bottom:28px;}
+  .container{max-width:880px;margin:0 auto;padding:0 20px 60px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px;margin-bottom:22px;}
+  .card h2{font-size:1.1rem;font-weight:700;margin-bottom:10px;}
+  .card p{color:var(--muted);font-size:.88rem;line-height:1.7;margin-bottom:14px;}
+  pre{background:#010409;border:1px solid var(--border);border-radius:10px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.8;}
+  .kw{color:#ff7b72;}.fn{color:#d2a8ff;}.cm{color:#8b949e;font-style:italic;}.tp{color:#ffa657;}
+
+  /* Phase pipeline */
+  .pipeline{display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;margin:20px 0;padding-bottom:8px;}
+  .phase{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:14px 18px;text-align:center;min-width:130px;flex-shrink:0;position:relative;transition:all .4s;opacity:.4;}
+  .phase.active{opacity:1;border-color:var(--purple);box-shadow:0 0 24px #7c3aed44;}
+  .phase.done{opacity:.7;border-color:var(--green);}
+  .phase-icon{font-size:1.6rem;display:block;margin-bottom:6px;}
+  .phase-name{font-size:.82rem;font-weight:700;color:var(--text);}
+  .phase-desc{font-size:.7rem;color:var(--muted);margin-top:4px;}
+  .arrow{color:var(--border);font-size:1.4rem;padding:0 6px;flex-shrink:0;}
+
+  /* Tree */
+  .tree{font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.9;background:#010409;border:1px solid var(--border);border-radius:10px;padding:18px;margin:16px 0;}
+  .tree-node{display:flex;align-items:center;gap:8px;padding:2px 0;opacity:0;transform:translateX(-10px);transition:all .4s;}
+  .tree-node.show{opacity:1;transform:translateX(0);}
+  .node-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;background:var(--purple);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;margin-top:12px;}
+  .btn:hover{background:#6d28d9;}
+
+  /* Recomposition demo */
+  .recomp-area{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;margin:16px 0;}
+  .mock-screen{width:220px;background:#1c2128;border:2px solid var(--border);border-radius:20px;overflow:hidden;flex-shrink:0;}
+  .mock-bar{height:26px;background:var(--surface);display:flex;align-items:center;padding:0 12px;font-size:.7rem;color:var(--muted);}
+  .mock-content{padding:14px;display:flex;flex-direction:column;gap:10px;}
+  .mock-card{background:var(--surface);border-radius:8px;padding:10px;font-size:.72rem;transition:all .3s;}
+  .mock-card.recomposing{background:#7c3aed33;border:1px solid var(--purple);animation:recomp .5s ease;}
+  @keyframes recomp{0%{background:#7c3aed66}100%{background:#7c3aed22}}
+  .mock-card.stable{border:1px solid var(--green);}
+  .label-log{flex:1;font-family:'JetBrains Mono',monospace;font-size:.74rem;line-height:1.8;background:#010409;border:1px solid var(--border);border-radius:10px;padding:14px;min-height:180px;}
+  .log-item{opacity:0;animation:fadeIn .4s ease forwards;margin-bottom:3px;}
+  @keyframes fadeIn{to{opacity:1}}
+  .c-skip{color:var(--green);}.c-recomp{color:var(--purple);}.c-info{color:var(--muted);}
+</style>
+</head>
+<body>
+<h1>🎨 How Compose Draws UI</h1>
+<p class="sub">Animated walkthrough of Composition → Layout → Drawing phases & smart recomposition</p>
+
+<div class="container">
+
+  <!-- Phase pipeline -->
+  <div class="card">
+    <h2>📐 The Three Phases</h2>
+    <p>Every frame in Compose goes through three phases in order. Compose is smart — it only runs the phases that are actually needed.</p>
+    <div class="pipeline" id="pipeline">
+      <div class="phase" id="ph0">
+        <span class="phase-icon">🧩</span>
+        <div class="phase-name">Composition</div>
+        <div class="phase-desc">What to show?<br>Runs @Composable fns<br>Builds UI tree</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="phase" id="ph1">
+        <span class="phase-icon">📏</span>
+        <div class="phase-name">Layout</div>
+        <div class="phase-desc">Where to put it?<br>Measure & place<br>Single-pass layout</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="phase" id="ph2">
+        <span class="phase-icon">🖌️</span>
+        <div class="phase-name">Drawing</div>
+        <div class="phase-desc">How to draw it?<br>Renders pixels<br>to Canvas</div>
+      </div>
+    </div>
+    <button class="btn" onclick="animatePhases()">▶ Animate Phases</button>
+  </div>
+
+  <!-- UI Tree -->
+  <div class="card">
+    <h2>🌳 Composition Tree</h2>
+    <p>During Composition, Compose builds a tree of UI nodes. This is NOT the View hierarchy — it's a lightweight slot table managed by the Compose runtime.</p>
+    <div class="tree" id="tree">
+      <div class="tree-node" id="tn0"><div class="node-dot" style="background:#7c3aed"></div><span style="color:#a78bfa">Scaffold</span></div>
+      <div class="tree-node" id="tn1" style="padding-left:20px"><div class="node-dot" style="background:#06b6d4"></div><span style="color:#67e8f9">TopAppBar</span></div>
+      <div class="tree-node" id="tn2" style="padding-left:20px"><div class="node-dot" style="background:#06b6d4"></div><span style="color:#67e8f9">LazyColumn</span></div>
+      <div class="tree-node" id="tn3" style="padding-left:40px"><div class="node-dot" style="background:#f59e0b"></div><span style="color:#fcd34d">UserCard(id=1)</span></div>
+      <div class="tree-node" id="tn4" style="padding-left:40px"><div class="node-dot" style="background:#f59e0b"></div><span style="color:#fcd34d">UserCard(id=2) <span style="color:var(--green)">← state changed</span></span></div>
+      <div class="tree-node" id="tn5" style="padding-left:40px"><div class="node-dot" style="background:#f59e0b"></div><span style="color:#fcd34d">UserCard(id=3)</span></div>
+      <div class="tree-node" id="tn6" style="padding-left:20px"><div class="node-dot" style="background:#06b6d4"></div><span style="color:#67e8f9">BottomBar</span></div>
+    </div>
+    <button class="btn" onclick="animateTree()">▶ Build Tree</button>
+  </div>
+
+  <!-- Smart Recomposition -->
+  <div class="card">
+    <h2>⚡ Smart Recomposition — Only What Changed</h2>
+    <p>When state changes, Compose only recomposes the composables that <strong>read</strong> that state. Everything else is <strong>skipped</strong>. This is the key performance advantage over XML.</p>
+    <div class="recomp-area">
+      <div class="mock-screen">
+        <div class="mock-bar">MyScreen.kt</div>
+        <div class="mock-content">
+          <div class="mock-card" id="mc-topbar" style="border:1px solid var(--border)">TopAppBar<br><span style="color:var(--green)">stable ✓</span></div>
+          <div class="mock-card" id="mc-card1" style="border:1px solid var(--border)">UserCard #1<br><span style="color:var(--green)">stable ✓</span></div>
+          <div class="mock-card" id="mc-card2" style="border:1px solid var(--border)">UserCard #2<br><span id="mc2-status">stable ✓</span></div>
+          <div class="mock-card" id="mc-card3" style="border:1px solid var(--border)">UserCard #3<br><span style="color:var(--green)">stable ✓</span></div>
+        </div>
+      </div>
+      <div class="label-log" id="recomp-log"><span style="color:var(--muted)">// Click simulate to see smart recomposition...</span></div>
+    </div>
+    <button class="btn" onclick="simulateRecomp()">▶ Simulate State Change</button>
+  </div>
+
+  <!-- Code: how recomposition is skipped -->
+  <div class="card">
+    <h2>🛡️ Preventing Unnecessary Recomposition</h2>
+    <pre><span class="cm">// ❌ Unstable — recomposes every time parent recomposes</span>
+<span class="fn">@Composable</span>
+<span class="kw">fun</span> <span class="fn">UserCard</span>(user: <span class="tp">User</span>) { <span class="cm">// User must be @Stable or data class</span>
+    Text(user.name)
+}
+
+<span class="cm">// ✅ Stable — Compose can SKIP recomposition if params haven't changed</span>
+<span class="fn">@Stable</span>
+<span class="kw">data class</span> <span class="tp">User</span>(val id: Int, val name: String)
+
+<span class="cm">// ✅ remember — cache expensive computation across recompositions</span>
+<span class="kw">val</span> sortedList = <span class="fn">remember</span>(users) { users.<span class="fn">sortedBy</span> { it.name } }
+
+<span class="cm">// ✅ derivedStateOf — only recompute when derived value actually changes</span>
+<span class="kw">val</span> isScrolled <span class="kw">by</span> <span class="fn">remember</span> { derivedStateOf { scrollState.value > 0 } }</pre>
+  </div>
+
+</div>
+
+<script>
+function animatePhases(){
+  const phases=['ph0','ph1','ph2'];
+  phases.forEach(id=>{const el=document.getElementById(id);if(el){el.classList.remove('active','done');}});
+  phases.forEach((id,i)=>{
+    setTimeout(()=>{
+      if(i>0){const prev=document.getElementById(phases[i-1]);if(prev){prev.classList.remove('active');prev.classList.add('done');}}
+      const el=document.getElementById(id);if(el)el.classList.add('active');
+    },i*1000);
+  });
+  setTimeout(()=>{const last=document.getElementById('ph2');if(last){last.classList.remove('active');last.classList.add('done');}},3200);
+}
+
+function animateTree(){
+  const nodes=['tn0','tn1','tn2','tn3','tn4','tn5','tn6'];
+  nodes.forEach(id=>{const el=document.getElementById(id);if(el){el.classList.remove('show');}});
+  nodes.forEach((id,i)=>setTimeout(()=>{const el=document.getElementById(id);if(el)el.classList.add('show');},i*300));
+}
+
+function simulateRecomp(){
+  const log=document.getElementById('recomp-log');
+  const card2=document.getElementById('mc-card2');
+  const s2=document.getElementById('mc2-status');
+  log.innerHTML='';
+  const entries=[
+    {d:0,cls:'c-info',msg:'// User taps Like on UserCard #2'},
+    {d:300,cls:'c-info',msg:'→ likeCount state changes'},
+    {d:600,cls:'c-recomp',msg:'Compose checks: who reads likeCount?'},
+    {d:1000,cls:'c-skip',msg:'✓ TopAppBar — skipped (no state read)'},
+    {d:1300,cls:'c-skip',msg:'✓ UserCard #1 — skipped (stable, no change)'},
+    {d:1600,cls:'c-recomp',msg:'⚡ UserCard #2 — RECOMPOSING (reads likeCount)'},
+    {d:2200,cls:'c-skip',msg:'✓ UserCard #3 — skipped (stable, no change)'},
+    {d:2600,cls:'c-info',msg:'→ Only 1 of 4 composables recomposed 🚀'},
+  ];
+  setTimeout(()=>{
+    if(card2)card2.classList.add('recomposing');
+    if(s2){s2.style.color='var(--purple)';s2.textContent='recomposing... ⚡';}
+  },1600);
+  setTimeout(()=>{
+    if(card2){card2.classList.remove('recomposing');card2.classList.add('stable');}
+    if(s2){s2.style.color='var(--green)';s2.textContent='done ✓';}
+  },2200);
+  entries.forEach(e=>{
+    setTimeout(()=>{
+      const div=document.createElement('div');
+      div.className='log-item';
+      div.innerHTML=`<span class="${e.cls}">${e.msg}</span>`;
+      log.appendChild(div);log.scrollTop=log.scrollHeight;
+    },e.d);
+  });
+}
+</script>
+</body>
+</html>

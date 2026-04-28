@@ -41,7 +41,7 @@ onDestroy()  → Activity is removed, clean up
 
 ### 🎬 Interactive Lifecycle Walkthrough
 
-<iframe src="activity_lifecycle_and_launch_modes.html" width="100%" height="450px" style="border:none; border-radius: 8px; margin: 1.5rem 0;"></iframe>
+> 🔗 **[Open Activity Lifecycle Visualizer →](./activity_lifecycle.html)**
 
 ## One-line memory trick:
 **Create → Start → Resume → Pause → Stop → Destroy**
@@ -83,7 +83,7 @@ Declared in `AndroidManifest.xml`:
 
 ### 🎬 Interactive Launch Modes Walkthrough (A → B → A)
 
-<iframe src="activity_lifecycle_and_launch_modes.html#launch-modes" width="100%" height="520px" style="border:none; border-radius: 8px; margin: 1.5rem 0;"></iframe>
+> 🔗 **[Open Launch Modes Visualizer →](./activity_launch_modes.html)**
 
 
 ## Important Real-World Notes (Interview Gold)

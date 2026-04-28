@@ -1,0 +1,85 @@
+
+<h2 class="sr-only">Android Activity Lifecycle — interactive walkthrough</h2>
+<style>
+:root{--cb:#e2e8f0;--ct:#cbd5e1;--ci:#94a3b8;--tp:#334155;--ts:#64748b;--tt:#94a3b8;--ti:#64748b;--tc:#10b981;--tw:#d97706;--td:#8b5cf6;--bp:#fff;--bs:#f8fafc;--bi:#f1f5f9;--bg:#ecfdf5;--bw:#fef3c7;--bd:#f5f3ff;--br:8px}
+body{font-family:'Inter',-apple-system,sans-serif;margin:0;color:var(--tp)}
+@media(prefers-reduced-motion:no-preference){.step-enter{animation:fadeSlide .35s ease forwards}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--cb);transition:background .2s,transform .2s;flex-shrink:0}
+.dot.active{background:var(--ti);transform:scale(1.3)}.dot.done{background:var(--tc)}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+.tag-lifecycle{background:var(--bi);color:var(--ti)}.tag-create{background:var(--bg);color:var(--tc)}.tag-destroy{background:var(--bw);color:var(--tw)}.tag-navigate{background:var(--bd);color:var(--td)}
+.flow-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.flow-box{font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid var(--cb);color:var(--ts);background:var(--bs)}
+.flow-box.hi{border-color:var(--ci);color:var(--ti);background:var(--bi);font-weight:500}
+.flow-arr{color:var(--tt);font-size:13px}
+.nav-btn{font-size:13px;padding:6px 18px;cursor:pointer;border-radius:6px;border:1px solid var(--cb);background:#fff;color:var(--ts);transition:all .2s}
+.nav-btn:hover:not(:disabled){background:var(--bi);border-color:var(--ci);color:var(--tp)}
+.nav-btn:disabled{opacity:.5;cursor:not-allowed}
+</style>
+
+<div style="padding:1rem 0">
+<div style="border:1px solid var(--ct);border-radius:var(--br);padding:1.25rem">
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap" id="lc-dots"></div>
+  <div id="lc-card" style="border:.5px solid var(--ct);border-radius:var(--br);padding:1.25rem 1.5rem;background:var(--bp);min-height:210px"></div>
+  <div style="display:flex;gap:10px;margin-top:1rem;align-items:center">
+    <button class="nav-btn" id="lc-prev" onclick="lcMove(-1)">← Prev</button>
+    <button class="nav-btn" id="lc-next" onclick="lcMove(1)">Next →</button>
+    <button class="nav-btn" id="lc-auto" onclick="lcToggleAuto()" style="margin-left:auto">▶ Auto-play</button>
+  </div>
+</div>
+</div>
+
+<script>
+const tagCls={lifecycle:'tag-lifecycle',create:'tag-create',destroy:'tag-destroy',navigate:'tag-navigate'};
+const lcSteps=[
+{tag:'create',tagLabel:'Creation',title:'onCreate() — Activity is born',
+desc:'The system calls onCreate() when the Activity is first created. This is where you perform one-time setup: inflate the layout with setContentView(), initialise ViewModels, bind views, and restore saved state from the Bundle.',
+flow:['System starts Activity','onCreate(savedInstanceState)','setContentView()'],highlight:1,
+detail:'Called only once per Activity instance. If the system previously destroyed the Activity, savedInstanceState contains the data you saved in onSaveInstanceState(). Otherwise it is null.'},
+{tag:'create',tagLabel:'Creation',title:'onStart() — Becoming visible',
+desc:'The Activity is now visible to the user but not yet in the foreground. The UI is rendered but the user cannot interact with it. This is a good place to start animations or register UI-related BroadcastReceivers.',
+flow:['onCreate() done','onStart()','UI visible but not interactive'],highlight:1,
+detail:'Paired with onStop(). Every time the Activity becomes visible again (e.g. returning from another Activity), onStart() is called.'},
+{tag:'lifecycle',tagLabel:'Running',title:'onResume() — Fully interactive',
+desc:'The Activity is now in the foreground and the user can interact with it. This is the "active" state. Start the camera preview, resume playing video, or begin location updates here.',
+flow:['onStart() done','onResume()','User can interact'],highlight:1,
+detail:'Paired with onPause(). The Activity stays in the resumed state until something takes focus away — a dialog, a new Activity, or the user pressing Home.'},
+{tag:'lifecycle',tagLabel:'Running',title:'App is running — the resumed state',
+desc:'The Activity is fully visible and interactive. The user is engaging with the UI. All lifecycle-aware components are in the RESUMED state. This is where your app spends most of its time.',
+flow:['RESUMED state','User interacting','Lifecycle observers active'],highlight:0,
+detail:'If the system needs memory, it will NOT kill a resumed Activity. Only paused or stopped Activities can be reclaimed.'},
+{tag:'destroy',tagLabel:'Pausing',title:'onPause() — Losing focus',
+desc:'Called when the Activity is partially obscured — e.g. a semi-transparent dialog appears, or multi-window mode activates. Release expensive resources like camera, and pause animations. Keep it fast — the next Activity waits for onPause() to finish.',
+flow:['Focus lost','onPause()','Release heavy resources'],highlight:1,
+detail:'Do NOT save data here — use onStop() instead. onPause() must complete quickly because the new Activity cannot resume until it finishes.'},
+{tag:'destroy',tagLabel:'Stopping',title:'onStop() — No longer visible',
+desc:'The Activity is completely hidden. Another Activity covers the entire screen, or the user pressed Home. Save persistent data, release all resources not needed while invisible. The Activity instance is still in memory.',
+flow:['Fully hidden','onStop()','Save data, release resources'],highlight:1,
+detail:'Paired with onStart(). The system may kill the process after onStop() without calling onDestroy() if memory is critically low (rare on modern devices).'},
+{tag:'lifecycle',tagLabel:'Restart',title:'onRestart() → onStart() — Coming back',
+desc:'When a stopped Activity returns to the foreground, onRestart() is called before onStart(). This only happens when the Activity was stopped but NOT destroyed — e.g. the user pressed Back from Activity B to return to Activity A.',
+flow:['User returns','onRestart()','onStart()','onResume()'],highlight:0,
+detail:'onRestart() is NOT called if the Activity was destroyed. In that case, the full onCreate() → onStart() → onResume() path runs.'},
+{tag:'destroy',tagLabel:'Destruction',title:'onDestroy() — Final cleanup',
+desc:'Called when the Activity is finishing (user called finish() or pressed Back) or the system is destroying it due to a configuration change (like rotation). Release all remaining resources and unregister all receivers.',
+flow:['Activity finishing','onDestroy()','Instance garbage collected'],highlight:1,
+detail:'Check isFinishing() to distinguish user-triggered destruction from system-triggered (config change). ViewModels survive config changes but NOT finish().'},
+{tag:'lifecycle',tagLabel:'Special',title:'onSaveInstanceState() — Surviving death',
+desc:'Called before the Activity may be killed by the system. Save transient UI state (scroll position, text input) into the Bundle. This data is passed back to onCreate() and onRestoreInstanceState() when the Activity is recreated.',
+flow:['System may kill','onSaveInstanceState(Bundle)','Data preserved'],highlight:1,
+detail:'NOT called when the user explicitly closes the Activity (Back button / finish()). Only called when the system might destroy and later recreate the Activity.'}
+];
+
+let lcCur=0,lcTimer=null;
+function lcDots(){let h='';for(let i=0;i<lcSteps.length;i++)h+=`<span id="lc-d-${i}" class="dot"></span>`;h+=`<span style="font-size:12px;color:var(--tt);margin-left:6px" id="lc-cnt"></span>`;document.getElementById('lc-dots').innerHTML=h}
+function lcRender(i){const s=lcSteps[i],c=document.getElementById('lc-card');c.innerHTML='';c.className='step-enter';void c.offsetWidth;
+const fh=s.flow.map((f,j)=>`<span class="flow-box${j===s.highlight?' hi':''}">${f}</span>${j<s.flow.length-1?'<span class="flow-arr">→</span>':''}`).join('');
+c.innerHTML=`<span class="pill ${tagCls[s.tag]}">${s.tagLabel}</span><div style="font-size:16px;font-weight:500;margin-bottom:8px">${s.title}</div><div style="font-size:14px;color:var(--ts);line-height:1.6;margin-bottom:12px">${s.desc}</div><div class="flow-row">${fh}</div><div style="margin-top:12px;border-left:2px solid var(--ci);padding-left:12px;font-size:12px;color:var(--ts);line-height:1.5">${s.detail}</div>`;
+for(let j=0;j<lcSteps.length;j++){document.getElementById('lc-d-'+j).className='dot'+(j===i?' active':j<i?' done':'')}
+document.getElementById('lc-cnt').textContent=`Step ${i+1} of ${lcSteps.length}`;
+document.getElementById('lc-prev').disabled=i===0;document.getElementById('lc-next').disabled=i===lcSteps.length-1}
+function lcMove(d){const n=Math.max(0,Math.min(lcSteps.length-1,lcCur+d));if(n===lcCur)return;lcCur=n;lcRender(lcCur)}
+function lcToggleAuto(){const b=document.getElementById('lc-auto');if(lcTimer){clearInterval(lcTimer);lcTimer=null;b.textContent='▶ Auto-play'}else{b.textContent='⏸ Pause';lcTimer=setInterval(()=>{if(lcCur<lcSteps.length-1){lcCur++;lcRender(lcCur)}else{clearInterval(lcTimer);lcTimer=null;b.textContent='▶ Auto-play'}},3000)}}
+lcDots();lcRender(0);
+</script>

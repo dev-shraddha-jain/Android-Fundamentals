@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MVVM vs MVI — Mechanism Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--purple:#7c3aed;--cyan:#06b6d4;--amber:#f59e0b;--green:#22c55e;--red:#ef4444;--text:#e6edf3;--muted:#8b949e;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  h1{text-align:center;padding:36px 20px 6px;font-size:1.75rem;font-weight:800;background:linear-gradient(135deg,#7c3aed,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .sub{text-align:center;color:var(--muted);font-size:.88rem;margin-bottom:28px;}
+  .tabs{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:0 20px 24px;}
+  .tab{padding:9px 20px;border:1px solid var(--border);border-radius:50px;cursor:pointer;font-size:.82rem;font-weight:600;transition:all .3s;background:var(--surface);color:var(--muted);}
+  .tab.active{background:var(--purple);border-color:var(--purple);color:#fff;}
+  .scene{display:none;max-width:900px;margin:0 auto;padding:0 20px 60px;}
+  .scene.active{display:block;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px;}
+  .card h2{font-size:1.05rem;font-weight:700;margin-bottom:10px;}
+  .card p{color:var(--muted);font-size:.87rem;line-height:1.7;margin-bottom:12px;}
+
+  /* Flow diagram */
+  .flow{display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;padding:16px 0;}
+  .node{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:12px 16px;text-align:center;min-width:110px;flex-shrink:0;transition:all .4s;position:relative;}
+  .node.highlight{border-color:var(--purple);box-shadow:0 0 20px #7c3aed55;background:#1a1040;}
+  .node.highlight-c{border-color:var(--cyan);box-shadow:0 0 20px #06b6d455;background:#001a20;}
+  .node.highlight-g{border-color:var(--green);box-shadow:0 0 20px #22c55e55;background:#001a0a;}
+  .node-icon{font-size:1.4rem;display:block;margin-bottom:4px;}
+  .node-name{font-size:.78rem;font-weight:700;}
+  .node-desc{font-size:.68rem;color:var(--muted);margin-top:3px;}
+  .arrow-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 4px;flex-shrink:0;}
+  .arrow-line{width:40px;height:2px;background:var(--border);position:relative;transition:background .4s;}
+  .arrow-line.active{background:var(--purple);}
+  .arrow-line.active-c{background:var(--cyan);}
+  .arrow-label{font-size:.62rem;color:var(--muted);white-space:nowrap;}
+  .arrow-head{font-size:.9rem;color:var(--border);transition:color .4s;}
+  .arrow-head.active{color:var(--purple);}
+  .arrow-head.active-c{color:var(--cyan);}
+
+  /* Step log */
+  .step-log{background:#010409;border:1px solid var(--border);border-radius:10px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:.74rem;line-height:1.8;min-height:130px;margin-top:12px;}
+  .log-e{opacity:0;animation:fi .4s ease forwards;margin-bottom:2px;}
+  @keyframes fi{to{opacity:1}}
+  .cl{color:var(--purple);}.cc{color:var(--cyan);}.cg{color:var(--green);}.cm{color:var(--muted);}.cr{color:var(--red);}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;background:var(--purple);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;margin-top:14px;}
+  .btn:hover{background:#6d28d9;}
+  .btn-c{background:var(--cyan);color:#000;}.btn-c:hover{background:#0891b2;}
+
+  /* Comparison table */
+  .tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
+  .tbl th,.tbl td{padding:11px 14px;border:1px solid var(--border);text-align:left;}
+  .tbl thead tr{background:#1c2128;}
+  .tbl .mvvm{color:#a78bfa;}.tbl .mvi{color:#67e8f9;}
+
+  /* Cycle arrows for MVI */
+  .cycle{display:flex;flex-direction:column;align-items:center;margin:16px 0;}
+  .cycle-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;}
+  .c-node{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:12px 18px;text-align:center;min-width:100px;transition:all .4s;}
+  .c-node.on{border-color:var(--cyan);box-shadow:0 0 18px #06b6d455;background:#001a20;}
+  .c-arr{font-size:1.2rem;color:var(--muted);}
+  .c-icon{font-size:1.3rem;display:block;}
+  .c-label{font-size:.75rem;font-weight:700;margin-top:3px;}
+  .c-sub{font-size:.66rem;color:var(--muted);}
+
+  pre{background:#010409;border:1px solid var(--border);border-radius:10px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.8;}
+  .kw{color:#ff7b72;}.fn{color:#d2a8ff;}.tp{color:#ffa657;}.str{color:#a5d6ff;}.cmt{color:#8b949e;font-style:italic;}
+
+  .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.72rem;font-weight:700;margin-left:6px;}
+  .bp{background:#7c3aed22;color:#a78bfa;border:1px solid #7c3aed;}
+  .bc{background:#06b6d422;color:#67e8f9;border:1px solid #06b6d4;}
+</style>
+</head>
+<body>
+<h1>🏗️ MVVM vs MVI</h1>
+<p class="sub">Animated data-flow walkthroughs — mechanism, difference & when to choose</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="show(0)">🔷 MVVM Flow</div>
+  <div class="tab" onclick="show(1)">🔵 MVI Cycle</div>
+  <div class="tab" onclick="show(2)">⚖️ Comparison</div>
+</div>
+
+<!-- MVVM -->
+<div class="scene active" id="s0">
+  <div class="card">
+    <h2>🔷 MVVM — Model · View · ViewModel</h2>
+    <p>The <strong>View</strong> observes state exposed by the <strong>ViewModel</strong>. The ViewModel fetches data from the <strong>Model</strong> (Repository/UseCase). Communication is <strong>bidirectional but loose</strong> — the ViewModel has no reference to the View.</p>
+
+    <div class="flow" id="mvvm-flow">
+      <div class="node" id="mv-user"><span class="node-icon">👤</span><div class="node-name">User</div><div class="node-desc">taps button</div></div>
+      <div class="arrow-wrap"><div class="arrow-line" id="a0"></div><div class="arrow-head" id="ah0">→</div><div class="arrow-label">event</div></div>
+      <div class="node" id="mv-view"><span class="node-icon">📱</span><div class="node-name">View</div><div class="node-desc">Activity/Fragment/Composable</div></div>
+      <div class="arrow-wrap"><div class="arrow-line" id="a1"></div><div class="arrow-head" id="ah1">→</div><div class="arrow-label">calls fn</div></div>
+      <div class="node" id="mv-vm"><span class="node-icon">🧠</span><div class="node-name">ViewModel</div><div class="node-desc">business logic</div></div>
+      <div class="arrow-wrap"><div class="arrow-line" id="a2"></div><div class="arrow-head" id="ah2">→</div><div class="arrow-label">fetch</div></div>
+      <div class="node" id="mv-repo"><span class="node-icon">🗄️</span><div class="node-name">Repository</div><div class="node-desc">data source</div></div>
+    </div>
+    <p style="color:var(--muted);font-size:.82rem;text-align:center;margin:4px 0 14px">← ViewModel exposes <strong>StateFlow</strong> / LiveData, View collects it automatically</p>
+
+    <div class="step-log" id="mvvm-log"><span class="cm">// Click Run to simulate a button tap...</span></div>
+    <button class="btn" onclick="runMVVM()">▶ Simulate Button Tap</button>
+  </div>
+
+  <div class="card">
+    <h2>✅ MVVM Code Pattern</h2>
+    <pre><span class="cmt">// ViewModel</span>
+<span class="kw">class</span> <span class="tp">UserViewModel</span> : ViewModel() {
+    <span class="kw">private val</span> _uiState = MutableStateFlow&lt;<span class="tp">UiState</span>&gt;(<span class="tp">UiState</span>.Loading)
+    <span class="kw">val</span> uiState = _uiState.asStateFlow()    <span class="cmt">// View observes this</span>
+
+    <span class="kw">fun</span> <span class="fn">loadUser</span>(id: <span class="tp">String</span>) {
+        viewModelScope.<span class="fn">launch</span> {
+            _uiState.value = <span class="tp">UiState</span>.Loading
+            _uiState.value = <span class="tp">UiState</span>.Success(repo.<span class="fn">getUser</span>(id))
+        }
+    }
+}
+
+<span class="cmt">// View (Compose)</span>
+<span class="fn">@Composable</span>
+<span class="kw">fun</span> <span class="fn">UserScreen</span>(vm: <span class="tp">UserViewModel</span> = hiltViewModel()) {
+    <span class="kw">val</span> state <span class="kw">by</span> vm.uiState.<span class="fn">collectAsStateWithLifecycle</span>()
+    Button(<span class="fn">onClick</span> = { vm.<span class="fn">loadUser</span>(<span class="str">"42"</span>) }) { Text(<span class="str">"Load"</span>) }
+}</pre>
+  </div>
+</div>
+
+<!-- MVI -->
+<div class="scene" id="s1">
+  <div class="card">
+    <h2>🔵 MVI — Model · View · Intent</h2>
+    <p>A strict <strong>unidirectional data flow</strong>. The View emits <strong>Intents</strong> (user actions). The ViewModel processes them into a new <strong>State</strong>. The View renders state. State is <strong>immutable</strong> — a new copy is always produced.</p>
+
+    <div class="cycle" id="mvi-cycle">
+      <div class="cycle-row">
+        <div class="c-node" id="cn-view"><span class="c-icon">📱</span><div class="c-label">View</div><div class="c-sub">renders State</div></div>
+        <div class="c-arr">→</div>
+        <div class="c-node" id="cn-intent"><span class="c-icon">⚡</span><div class="c-label">Intent</div><div class="c-sub">user action</div></div>
+        <div class="c-arr">→</div>
+        <div class="c-node" id="cn-vm"><span class="c-icon">🧠</span><div class="c-label">ViewModel</div><div class="c-sub">processes intent</div></div>
+      </div>
+      <div style="text-align:center;font-size:1.4rem;color:var(--muted);margin:6px 0">↑ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↓</div>
+      <div class="cycle-row">
+        <div class="c-node" id="cn-state"><span class="c-icon">📦</span><div class="c-label">State</div><div class="c-sub">immutable snapshot</div></div>
+        <div class="c-arr">←</div>
+        <div class="c-node" id="cn-reducer"><span class="c-icon">🔄</span><div class="c-label">Reducer</div><div class="c-sub">old state + intent = new state</div></div>
+        <div class="c-arr">←</div>
+        <div class="c-node" id="cn-model"><span class="c-icon">🗄️</span><div class="c-label">Model</div><div class="c-sub">data result</div></div>
+      </div>
+    </div>
+
+    <div class="step-log" id="mvi-log"><span class="cm">// Click Run to simulate the MVI cycle...</span></div>
+    <button class="btn btn-c" onclick="runMVI()">▶ Simulate MVI Cycle</button>
+  </div>
+
+  <div class="card">
+    <h2>✅ MVI Code Pattern</h2>
+    <pre><span class="cmt">// Intent — sealed class of all user actions</span>
+<span class="kw">sealed class</span> <span class="tp">UserIntent</span> {
+    <span class="kw">data class</span> <span class="tp">LoadUser</span>(<span class="kw">val</span> id: <span class="tp">String</span>) : <span class="tp">UserIntent</span>()
+    <span class="kw">object</span> <span class="tp">Refresh</span> : <span class="tp">UserIntent</span>()
+}
+
+<span class="cmt">// State — single immutable data class</span>
+<span class="kw">data class</span> <span class="tp">UserState</span>(
+    <span class="kw">val</span> isLoading: <span class="tp">Boolean</span> = <span class="kw">false</span>,
+    <span class="kw">val</span> user: <span class="tp">User?</span> = <span class="kw">null</span>,
+    <span class="kw">val</span> error: <span class="tp">String?</span> = <span class="kw">null</span>
+)
+
+<span class="cmt">// ViewModel processes intents via a Channel</span>
+<span class="kw">class</span> <span class="tp">UserViewModel</span> : ViewModel() {
+    <span class="kw">private val</span> intentChannel = Channel&lt;<span class="tp">UserIntent</span>&gt;(Channel.UNLIMITED)
+    <span class="kw">private val</span> _state = MutableStateFlow(<span class="tp">UserState</span>())
+    <span class="kw">val</span> state = _state.asStateFlow()
+
+    init {
+        viewModelScope.<span class="fn">launch</span> {
+            intentChannel.<span class="fn">consumeAsFlow</span>().<span class="fn">collect</span> { intent ->
+                <span class="fn">reduce</span>(_state.value, intent)
+            }
+        }
+    }
+
+    <span class="kw">private suspend fun</span> <span class="fn">reduce</span>(current: <span class="tp">UserState</span>, intent: <span class="tp">UserIntent</span>) {
+        <span class="kw">when</span>(intent) {
+            <span class="kw">is</span> <span class="tp">UserIntent.LoadUser</span> -> {
+                _state.value = current.<span class="fn">copy</span>(isLoading = <span class="kw">true</span>)
+                <span class="kw">val</span> user = repo.<span class="fn">getUser</span>(intent.id)
+                _state.value = current.<span class="fn">copy</span>(isLoading = <span class="kw">false</span>, user = user)
+            }
+        }
+    }
+    <span class="kw">fun</span> <span class="fn">sendIntent</span>(i: <span class="tp">UserIntent</span>) = viewModelScope.<span class="fn">launch</span> { intentChannel.<span class="fn">send</span>(i) }
+}</pre>
+  </div>
+</div>
+
+<!-- Comparison -->
+<div class="scene" id="s2">
+  <div class="card">
+    <h2>⚖️ MVVM vs MVI — Full Comparison</h2>
+    <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>Aspect</th><th class="mvvm">MVVM <span class="badge bp">recommended default</span></th><th class="mvi">MVI <span class="badge bc">for complex UIs</span></th></tr></thead>
+      <tbody>
+        <tr><td><strong>Data Flow</strong></td><td class="mvvm">Bidirectional (View ↔ ViewModel)</td><td class="mvi">Strictly Unidirectional (circular)</td></tr>
+        <tr><td><strong>State</strong></td><td class="mvvm">Multiple StateFlows / LiveData</td><td class="mvi">Single immutable State object</td></tr>
+        <tr><td><strong>User actions</strong></td><td class="mvvm">Direct ViewModel function calls</td><td class="mvi">Typed Intent sealed class</td></tr>
+        <tr><td><strong>Reducer</strong></td><td class="mvvm">No explicit reducer</td><td class="mvi">Pure reduce(state, intent) function</td></tr>
+        <tr><td><strong>Predictability</strong></td><td class="mvvm">Good</td><td class="mvi">Excellent — 100% deterministic</td></tr>
+        <tr><td><strong>Testability</strong></td><td class="mvvm">Good (test ViewModel fns)</td><td class="mvi">Excellent (pure reduce fn)</td></tr>
+        <tr><td><strong>Boilerplate</strong></td><td class="mvvm">Low</td><td class="mvi">High (Intent, State, Reducer)</td></tr>
+        <tr><td><strong>Debugging</strong></td><td class="mvvm">Standard</td><td class="mvi">Replay any state from event log</td></tr>
+        <tr><td><strong>Learning curve</strong></td><td class="mvvm">Low</td><td class="mvi">Steep</td></tr>
+        <tr><td><strong>Best for</strong></td><td class="mvvm">Most Android apps, simple→medium complexity</td><td class="mvi">Complex forms, multi-step flows, fintech</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🎯 When to Choose Which?</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div style="background:#0d0020;border:2px solid #7c3aed;border-radius:12px;padding:18px">
+        <div style="color:#a78bfa;font-weight:700;font-size:1rem;margin-bottom:10px">Choose MVVM when…</div>
+        <ul style="color:var(--muted);font-size:.84rem;line-height:2;padding-left:16px">
+          <li>Standard CRUD / list screens</li>
+          <li>Small to medium teams</li>
+          <li>Google Architecture Components native</li>
+          <li>Tight deadlines / less boilerplate needed</li>
+          <li>New Android developers on the team</li>
+        </ul>
+      </div>
+      <div style="background:#00101a;border:2px solid #06b6d4;border-radius:12px;padding:18px">
+        <div style="color:#67e8f9;font-weight:700;font-size:1rem;margin-bottom:10px">Choose MVI when…</div>
+        <ul style="color:var(--muted);font-size:.84rem;line-height:2;padding-left:16px">
+          <li>Complex multi-state screens (payment, checkout)</li>
+          <li>Need time-travel debugging</li>
+          <li>Many concurrent user actions</li>
+          <li>High test coverage requirement</li>
+          <li>Team experienced with Redux/Elm pattern</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(n){
+  document.querySelectorAll('.scene').forEach((s,i)=>s.classList.toggle('active',i===n));
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===n));
+}
+
+function runMVVM(){
+  const nodes={'mv-user':'highlight','mv-view':'highlight','mv-vm':'highlight','mv-repo':'highlight-c'};
+  const arrows=[['a0','ah0'],['a1','ah1'],['a2','ah2']];
+  const log=document.getElementById('mvvm-log');
+  log.innerHTML='';
+  Object.keys(nodes).forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('highlight','highlight-c','highlight-g');});
+  arrows.forEach(([a,h])=>{const el=document.getElementById(a),eh=document.getElementById(h);if(el)el.classList.remove('active','active-c');if(eh)eh.classList.remove('active','active-c');});
+
+  const steps=[
+    {d:0,nodes:['mv-user'],arrows:[],cls:'cm',msg:'User taps "Load User" button'},
+    {d:400,nodes:['mv-view'],arrows:[['a0','ah0','active']],cls:'cl',msg:'[View] onClick → vm.loadUser("42")'},
+    {d:900,nodes:['mv-vm'],arrows:[['a1','ah1','active']],cls:'cl',msg:'[ViewModel] loadUser() called — launches coroutine'},
+    {d:1400,nodes:['mv-vm'],arrows:[],cls:'cm',msg:'[ViewModel] _uiState.value = UiState.Loading'},
+    {d:1800,nodes:['mv-repo'],arrows:[['a2','ah2','active-c']],cls:'cc',msg:'[Repository] fetching from network...'},
+    {d:2800,nodes:['mv-repo'],arrows:[],cls:'cg',msg:'[Repository] ✅ user data returned'},
+    {d:3200,nodes:['mv-vm'],arrows:[],cls:'cl',msg:'[ViewModel] _uiState.value = UiState.Success(user)'},
+    {d:3700,nodes:['mv-view'],arrows:[],cls:'cg',msg:'[View] StateFlow collector triggers → renders UserCard ✅'},
+  ];
+
+  steps.forEach(step=>{
+    setTimeout(()=>{
+      const nodeClass=step.nodes.some(n=>n==='mv-repo')?'highlight-c':'highlight';
+      step.nodes.forEach(id=>{const el=document.getElementById(id);if(el)el.classList.add(nodeClass);});
+      step.arrows.forEach(([a,h,cls])=>{const el=document.getElementById(a),eh=document.getElementById(h);if(el)el.classList.add(cls||'active');if(eh)eh.classList.add(cls||'active');});
+      const div=document.createElement('div');div.className='log-e';
+      div.innerHTML=`<span class="cm">${(step.d/1000).toFixed(1)}s</span> <span class="${step.cls}">${step.msg}</span>`;
+      log.appendChild(div);log.scrollTop=log.scrollHeight;
+    },step.d);
+  });
+}
+
+function runMVI(){
+  const allNodes=['cn-view','cn-intent','cn-vm','cn-model','cn-reducer','cn-state'];
+  allNodes.forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('on');});
+  const log=document.getElementById('mvi-log');log.innerHTML='';
+
+  const steps=[
+    {d:0,nodes:['cn-view'],cls:'cc',msg:'[View] User taps "Refresh" button'},
+    {d:500,nodes:['cn-intent'],cls:'cl',msg:'[Intent] UserIntent.Refresh emitted → intentChannel.send()'},
+    {d:1100,nodes:['cn-vm'],cls:'cl',msg:'[ViewModel] intent collected from Channel'},
+    {d:1600,nodes:['cn-model'],cls:'cc',msg:'[Model/Repository] fetching fresh data...'},
+    {d:2600,nodes:['cn-reducer'],cls:'cl',msg:'[Reducer] reduce(currentState, Refresh) called'},
+    {d:3100,nodes:['cn-reducer'],cls:'cm',msg:'[Reducer] newState = currentState.copy(isLoading=false, users=result)'},
+    {d:3600,nodes:['cn-state'],cls:'cg',msg:'[State] new immutable UserState emitted via StateFlow'},
+    {d:4100,nodes:['cn-view'],cls:'cg',msg:'[View] collects new State → recomposes UI ✅'},
+    {d:4100,nodes:[],cls:'cm',msg:'← Cycle complete. Every step is traceable & testable.'},
+  ];
+
+  steps.forEach(step=>{
+    setTimeout(()=>{
+      allNodes.forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('on');});
+      step.nodes.forEach(id=>{const el=document.getElementById(id);if(el)el.classList.add('on');});
+      const div=document.createElement('div');div.className='log-e';
+      div.innerHTML=`<span class="cm">${(step.d/1000).toFixed(1)}s</span> <span class="${step.cls}">${step.msg}</span>`;
+      log.appendChild(div);log.scrollTop=log.scrollHeight;
+    },step.d);
+  });
+}
+</script>
+</body>
+</html>

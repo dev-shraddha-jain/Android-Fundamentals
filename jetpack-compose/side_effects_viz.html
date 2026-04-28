@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Compose Side Effects Visualized</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--purple:#7c3aed;--cyan:#06b6d4;--amber:#f59e0b;--green:#22c55e;--red:#ef4444;--text:#e6edf3;--muted:#8b949e;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);}
+  h1{text-align:center;padding:36px 20px 6px;font-size:1.8rem;font-weight:800;background:linear-gradient(135deg,#7c3aed,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .sub{text-align:center;color:var(--muted);font-size:.9rem;margin-bottom:30px;}
+  .tabs{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:0 20px 24px;}
+  .tab{padding:9px 20px;border:1px solid var(--border);border-radius:50px;cursor:pointer;font-size:.82rem;font-weight:600;transition:all .3s;background:var(--surface);color:var(--muted);}
+  .tab.active{background:var(--purple);border-color:var(--purple);color:#fff;}
+  .scene{display:none;max-width:860px;margin:0 auto;padding:0 20px 60px;}
+  .scene.active{display:block;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px;margin-bottom:20px;}
+  .card h2{font-size:1.1rem;font-weight:700;margin-bottom:10px;}
+  .card p{color:var(--muted);font-size:.88rem;line-height:1.7;margin-bottom:12px;}
+  pre{background:#010409;border:1px solid var(--border);border-radius:10px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.8;}
+  .kw{color:#ff7b72;}.fn{color:#d2a8ff;}.cm{color:#8b949e;font-style:italic;}.tp{color:#ffa657;}.str{color:#a5d6ff;}
+  .btn{display:inline-flex;align-items:center;gap:6px;background:var(--purple);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;margin-top:12px;}
+  .btn:hover{background:#6d28d9;}
+  .btn-c{background:var(--cyan);color:#000;}.btn-c:hover{background:#0891b2;}
+  .phone-area{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;margin:16px 0;}
+  .phone{width:190px;background:#1c2128;border:2px solid var(--border);border-radius:22px;overflow:hidden;flex-shrink:0;}
+  .phone-bar{height:26px;background:var(--surface);display:flex;align-items:center;padding:0 12px;font-size:.7rem;color:var(--muted);}
+  .phone-content{padding:14px;min-height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+  .log-box{flex:1;background:#010409;border:1px solid var(--border);border-radius:10px;padding:14px;min-height:170px;font-family:'JetBrains Mono',monospace;font-size:.73rem;line-height:1.8;}
+  .le{opacity:0;animation:fi .4s ease forwards;margin-bottom:2px;}
+  @keyframes fi{to{opacity:1}}
+  .c-i{color:var(--green);}.c-l{color:var(--purple);}.c-d{color:var(--red);}.c-s{color:var(--cyan);}.c-m{color:var(--muted);}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;animation:p 1s infinite;}
+  @keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+  .timer{font-size:2rem;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--cyan);}
+  .step{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--border);}
+  .step:last-child{border-bottom:none;}
+  .sn{width:26px;height:26px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;flex-shrink:0;}
+  .sb{font-size:.86rem;line-height:1.6;color:var(--muted);}
+  .sb strong{color:var(--text);}
+  .tbl{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px;}
+  .tbl th,.tbl td{padding:11px 14px;border:1px solid var(--border);text-align:left;}
+  .tbl thead tr{background:#1c2128;}
+  .lf-track{background:#1c2128;border-radius:6px;height:30px;position:relative;overflow:hidden;margin-bottom:8px;}
+  .lf-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .lf-lbl{width:130px;font-size:.74rem;font-family:'JetBrains Mono',monospace;color:var(--muted);flex-shrink:0;}
+  .lf-b{position:absolute;top:4px;height:22px;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:.7rem;font-weight:600;opacity:0;transition:opacity .4s;}
+  .lf-b.s{opacity:1;}
+  .ba{background:#7c3aed;color:#fff;}.bc{background:#06b6d4;color:#000;}.bd{background:#ef4444;color:#fff;}.be{background:#1c2128;border:1px dashed var(--border);color:var(--muted);}
+</style>
+</head>
+<body>
+<h1>⚡ Compose Side Effects</h1>
+<p class="sub">LaunchedEffect · DisposableEffect · SideEffect — animated walkthroughs</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="show(0)">🚀 LaunchedEffect</div>
+  <div class="tab" onclick="show(1)">🧹 DisposableEffect</div>
+  <div class="tab" onclick="show(2)">🔁 SideEffect</div>
+  <div class="tab" onclick="show(3)">📊 Comparison</div>
+</div>
+
+<!-- LaunchedEffect -->
+<div class="scene active" id="s0">
+  <div class="card">
+    <h2>🚀 LaunchedEffect</h2>
+    <p>Launches a coroutine tied to the composable's lifecycle. Re-runs when the <strong>key</strong> changes. Auto-cancelled on leave.</p>
+    <pre><span class="fn">@Composable</span>
+<span class="kw">fun</span> <span class="fn">UserProfile</span>(userId: <span class="tp">String</span>) {
+    <span class="kw">var</span> user <span class="kw">by</span> <span class="fn">remember</span> { mutableStateOf&lt;<span class="tp">User?</span>&gt;(null) }
+
+    <span class="fn">LaunchedEffect</span>(userId) { <span class="cm">// re-runs when userId changes</span>
+        user = repo.<span class="fn">getUser</span>(userId) <span class="cm">// suspend call — non-blocking</span>
+    } <span class="cm">// auto-cancelled when composable leaves</span>
+}</pre>
+  </div>
+  <div class="card">
+    <h2>▶ Live Simulation</h2>
+    <div class="phone-area">
+      <div class="phone">
+        <div class="phone-bar">UserProfile.kt</div>
+        <div class="phone-content">
+          <div class="timer" id="le-t">--</div>
+          <span class="dot" id="le-dot" style="background:var(--muted);animation:none"></span>
+          <div style="font-size:.74rem;color:var(--muted)" id="le-s">Idle</div>
+        </div>
+      </div>
+      <div class="log-box" id="le-log"><span class="c-m">// Click Run...</span></div>
+    </div>
+    <button class="btn" onclick="runLE()">▶ Run Simulation</button>
+  </div>
+  <div class="card">
+    <div class="step"><div class="sn">1</div><div class="sb"><strong>Enter composition</strong> → LaunchedEffect coroutine starts immediately</div></div>
+    <div class="step"><div class="sn">2</div><div class="sb"><strong>Key changes</strong> → previous coroutine cancelled, new one starts</div></div>
+    <div class="step"><div class="sn">3</div><div class="sb"><strong>Leave composition</strong> → coroutine automatically cancelled</div></div>
+    <div class="step"><div class="sn">4</div><div class="sb">Use <code>Unit</code> as key to run only <strong>once on first composition</strong></div></div>
+  </div>
+</div>
+
+<!-- DisposableEffect -->
+<div class="scene" id="s1">
+  <div class="card">
+    <h2>🧹 DisposableEffect</h2>
+    <p>For effects needing <strong>cleanup</strong>. The <code>onDispose</code> block is always called on leave or key change. Not a coroutine.</p>
+    <pre><span class="fn">@Composable</span>
+<span class="kw">fun</span> <span class="fn">LocationTracker</span>(onLocation: (<span class="tp">LatLng</span>) -> <span class="tp">Unit</span>) {
+    <span class="kw">val</span> context = LocalContext.current
+
+    <span class="fn">DisposableEffect</span>(context) {
+        <span class="kw">val</span> mgr = context.<span class="fn">getSystemService</span>&lt;<span class="tp">LocationManager</span>&gt;()
+        <span class="kw">val</span> listener = <span class="fn">LocationListener</span> { onLocation(it.<span class="fn">toLatLng</span>()) }
+        mgr.<span class="fn">requestLocationUpdates</span>(<span class="str">"gps"</span>, 0L, 0f, listener) <span class="cm">// register</span>
+
+        onDispose {
+            mgr.<span class="fn">removeUpdates</span>(listener) <span class="cm">// cleanup — always runs</span>
+        }
+    }
+}</pre>
+  </div>
+  <div class="card">
+    <h2>▶ Live Simulation</h2>
+    <div class="phone-area">
+      <div class="phone">
+        <div class="phone-bar">LocationTracker.kt</div>
+        <div class="phone-content" id="de-phone"><div style="font-size:.8rem;color:var(--muted)">Waiting...</div></div>
+      </div>
+      <div class="log-box" id="de-log"><span class="c-m">// Click Run...</span></div>
+    </div>
+    <button class="btn btn-c" onclick="runDE()">▶ Run Simulation</button>
+  </div>
+  <div class="card">
+    <div class="step"><div class="sn">1</div><div class="sb"><strong>Enter composition</strong> → DisposableEffect block runs → GPS listener registered</div></div>
+    <div class="step"><div class="sn">2</div><div class="sb">Location callbacks arrive normally</div></div>
+    <div class="step"><div class="sn">3</div><div class="sb"><strong>Leave composition</strong> → <code>onDispose</code> runs → listener removed. No leaks.</div></div>
+    <div class="step"><div class="sn">4</div><div class="sb">Also for: <strong>BroadcastReceiver, LifecycleObserver, WebSocket, Sensors</strong></div></div>
+  </div>
+</div>
+
+<!-- SideEffect -->
+<div class="scene" id="s2">
+  <div class="card">
+    <h2>🔁 SideEffect</h2>
+    <p>Runs after <strong>every successful recomposition</strong>. Not a coroutine. Used to sync Compose state outward to non-Compose systems.</p>
+    <pre><span class="fn">@Composable</span>
+<span class="kw">fun</span> <span class="fn">AnalyticsScreen</span>(name: <span class="tp">String</span>, analytics: <span class="tp">Analytics</span>) {
+    <span class="fn">SideEffect</span> {
+        <span class="cm">// ✅ Runs after every successful recomposition</span>
+        analytics.<span class="fn">setScreen</span>(name)
+    }
+    <span class="cm">// Also for system UI:</span>
+    <span class="kw">val</span> uiCtrl = rememberSystemUiController()
+    <span class="fn">SideEffect</span> { uiCtrl.<span class="fn">setStatusBarColor</span>(<span class="tp">Color</span>.Transparent) }
+}</pre>
+    <div style="margin-top:16px">
+      <div class="lf-row"><div class="lf-lbl">Recomposition 1</div><div class="lf-track" style="flex:1"><div class="lf-b bc" id="se1" style="left:0;width:38%">Composable runs</div><div class="lf-b ba" id="se1b" style="left:40%;width:58%">SideEffect runs ✓</div></div></div>
+      <div class="lf-row"><div class="lf-lbl">Recomposition 2</div><div class="lf-track" style="flex:1"><div class="lf-b bc" id="se2" style="left:0;width:38%">State changed</div><div class="lf-b ba" id="se2b" style="left:40%;width:58%">SideEffect runs again ✓</div></div></div>
+      <div class="lf-row"><div class="lf-lbl">Failed recomp.</div><div class="lf-track" style="flex:1"><div class="lf-b bd" id="se3" style="left:0;width:38%">Error/abandoned</div><div class="lf-b be" id="se3b" style="left:40%;width:58%">SideEffect skipped ✓</div></div></div>
+    </div>
+    <button class="btn" onclick="animateSE()">▶ Animate</button>
+  </div>
+</div>
+
+<!-- Comparison -->
+<div class="scene" id="s3">
+  <div class="card">
+    <h2>📊 Side Effects — Comparison</h2>
+    <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>Side Effect</th><th>Coroutine?</th><th>When it runs</th><th>Cleanup?</th><th>Use for</th></tr></thead>
+      <tbody>
+        <tr><td style="color:#a78bfa"><strong>LaunchedEffect</strong></td><td style="color:var(--green)">✅</td><td style="color:var(--muted)">On enter + key change</td><td style="color:var(--green)">Auto (cancelled)</td><td style="color:var(--muted)">API calls, timers, animations</td></tr>
+        <tr><td style="color:#67e8f9"><strong>DisposableEffect</strong></td><td style="color:var(--red)">❌</td><td style="color:var(--muted)">On enter + key change</td><td style="color:var(--green)">Yes (onDispose)</td><td style="color:var(--muted)">Listeners, observers, streams</td></tr>
+        <tr><td style="color:#fcd34d"><strong>SideEffect</strong></td><td style="color:var(--red)">❌</td><td style="color:var(--muted)">Every recomposition</td><td style="color:var(--red)">❌</td><td style="color:var(--muted)">Analytics, system UI sync</td></tr>
+        <tr><td style="color:#86efac"><strong>rememberCoroutineScope</strong></td><td style="color:var(--green)">✅</td><td style="color:var(--muted)">On user event (click)</td><td style="color:var(--green)">Auto (on dispose)</td><td style="color:var(--muted)">Snackbar, scroll, click-driven</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(n){
+  document.querySelectorAll('.scene').forEach((s,i)=>s.classList.toggle('active',i===n));
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===n));
+}
+let leInt=null;
+function runLE(){
+  if(leInt)clearInterval(leInt);
+  const log=document.getElementById('le-log'),timer=document.getElementById('le-t'),dot=document.getElementById('le-dot'),status=document.getElementById('le-s');
+  log.innerHTML='';let sec=0;
+  const entries=[
+    {d:0,c:'c-i',m:'Composable enters composition'},
+    {d:400,c:'c-l',m:'[LaunchedEffect] key=user_1 → coroutine launched'},
+    {d:900,c:'c-l',m:'[LaunchedEffect] fetching user_1...'},
+    {d:1800,c:'c-i',m:'✅ user_1 loaded'},
+    {d:2600,c:'c-s',m:'⚡ userId changed → user_2'},
+    {d:2800,c:'c-d',m:'[LaunchedEffect] previous coroutine CANCELLED'},
+    {d:3000,c:'c-l',m:'[LaunchedEffect] key=user_2 → new coroutine launched'},
+    {d:3800,c:'c-i',m:'✅ user_2 loaded'},
+    {d:5000,c:'c-s',m:'User navigates away...'},
+    {d:5300,c:'c-d',m:'[LaunchedEffect] coroutine CANCELLED 🧹'},
+  ];
+  dot.style.background='var(--green)';dot.style.animation='p 1s infinite';status.textContent='Running...';
+  leInt=setInterval(()=>{sec++;timer.textContent=sec+'s';},1000);
+  entries.forEach(e=>setTimeout(()=>{
+    const d=document.createElement('div');d.className='le';
+    d.innerHTML=`<span class="c-m">${(e.d/1000).toFixed(1)}s</span> <span class="${e.c}">${e.m}</span>`;
+    log.appendChild(d);log.scrollTop=log.scrollHeight;
+  },e.d));
+  setTimeout(()=>{clearInterval(leInt);dot.style.background='var(--muted)';dot.style.animation='none';status.textContent='Stopped';timer.textContent='--';},5800);
+}
+function runDE(){
+  const log=document.getElementById('de-log'),phone=document.getElementById('de-phone');
+  log.innerHTML='';
+  phone.innerHTML='<div style="font-size:.8rem;color:var(--muted)">Starting...</div>';
+  const entries=[
+    {d:0,c:'c-i',m:'LocationTracker enters composition'},
+    {d:500,c:'c-l',m:'[DisposableEffect] registering GPS listener...'},
+    {d:900,c:'c-i',m:'✅ requestLocationUpdates() called'},
+    {d:1400,c:'c-s',m:'📍 Loc: 28.61, 77.20'},
+    {d:2200,c:'c-s',m:'📍 Loc: 28.62, 77.21'},
+    {d:3000,c:'c-s',m:'📍 Loc: 28.63, 77.22'},
+    {d:4000,c:'c-s',m:'User navigates away...'},
+    {d:4300,c:'c-d',m:'[onDispose] called 🧹'},
+    {d:4600,c:'c-d',m:'✅ removeUpdates() called — no leaks'},
+  ];
+  setTimeout(()=>{phone.innerHTML='<span class="dot"></span><div style="font-size:.74rem;color:var(--green);margin-top:6px">GPS Active</div><div id="loc" style="font-size:.7rem;color:var(--muted);font-family:JetBrains Mono,monospace">--</div>';},900);
+  [{d:1400,v:'28.61, 77.20'},{d:2200,v:'28.62, 77.21'},{d:3000,v:'28.63, 77.22'}].forEach(e=>setTimeout(()=>{const el=document.getElementById('loc');if(el)el.textContent=e.v;},e.d));
+  setTimeout(()=>{phone.innerHTML='<div style="font-size:.8rem;color:var(--red)">Listener removed ✅</div>';},4600);
+  entries.forEach(e=>setTimeout(()=>{
+    const d=document.createElement('div');d.className='le';
+    d.innerHTML=`<span class="c-m">${(e.d/1000).toFixed(1)}s</span> <span class="${e.c}">${e.m}</span>`;
+    log.appendChild(d);log.scrollTop=log.scrollHeight;
+  },e.d));
+}
+function animateSE(){
+  ['se1','se1b','se2','se2b','se3','se3b'].forEach(id=>{const el=document.getElementById(id);if(el){el.classList.remove('s');void el.offsetWidth;}});
+  [['se1',0],['se1b',600],['se2',1400],['se2b',2000],['se3',2800],['se3b',3200]].forEach(([id,d])=>setTimeout(()=>{const el=document.getElementById(id);if(el)el.classList.add('s');},d));
+}
+</script>
+</body>
+</html>

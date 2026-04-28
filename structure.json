@@ -20,14 +20,18 @@
     "files": [
       {
         "name": "Platform Architecture",
-        "path": "android-architecture/Architecture.md"
+        "path": "android-architecture/PlatformArchitecture.md"
       },
       {
         "name": "Android Manifest",
         "path": "android-manifest/Manifest.md"
       },
       {
-        "name": "Interview QnA (Architecture)",
+        "name": "App Structure (MVVM vs MVI)",
+        "path": "android-architecture/Architecture.md"
+      },
+      {
+        "name": "Interview QnA (Platform Architecture)",
         "path": "android-architecture/Interview.md"
       },
       {
@@ -66,7 +70,7 @@
         "path": "android-components/service/workmanger/workmanager.md"
       },
       {
-        "name": "App Witout An Activity ?",
+        "name": "App Without An Activity ?",
         "path": "android-components/service/serviceApp.md"
       },
       {
@@ -128,6 +132,14 @@
         "path": "storage-deep-dive/Storage.md"
       },
       {
+        "name": "Room Database Deep Dive",
+        "path": "storage-deep-dive/Room-deep-dive.md"
+      },
+      {
+        "name": "SQLite Deep Dive",
+        "path": "storage-deep-dive/SQLite.md"
+      },
+      {
         "name": "Permissions Deep-Dive",
         "path": "android-manifest/permissions/Permissions.md"
       },
@@ -143,9 +155,13 @@
     "is_root": false
   },
   {
-    "name": "5. Performance & Security",
+    "name": "5. Performance",
     "path": "",
     "files": [
+       {
+        "name": "Performance Concepts",
+        "path": "performance-optimisation/concepts.md"
+      },
       {
         "name": "Memory Management",
         "path": "android-performance/MemoryManagement.md"
@@ -157,10 +173,6 @@
       {
         "name": "Code Obfuscation",
         "path": "obfuscate/ProguardR8.md"
-      },
-      {
-        "name": "WebView Security",
-        "path": "android-webview/WebView.md"
       },
       {
         "name": "Interview QnA (WebView)",
@@ -193,7 +205,90 @@
     "is_root": false
   },
   {
-    "name": "7. Reverse Engineering",
+    "name": "7. Jetpack Compose",
+    "path": "",
+    "files": [
+      {
+        "name": "Compose Concepts",
+        "path": "jetpack-compose/ComposeConcepts.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "8. Networking",
+    "path": "",
+    "files": [
+      {
+        "name": "Retrofit",
+        "path": "networking/retrofit.md"
+      },
+      {
+        "name": "Ktor",
+        "path": "networking/ktor.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "9. System Design (HLD)",
+    "path": "",
+    "files": [
+      {
+        "name": "Core Concepts",
+        "path": "system-design/concepts.md"
+      },
+      {
+        "name": "Example Systems (Interview)",
+        "path": "system-design/interview.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "10. Security",
+    "path": "",
+    "files": [
+      {
+        "name": "Android Security",
+        "path": "security/Security.md"
+      },
+       {
+        "name": "WebView Security",
+        "path": "android-webview/WebView.md"
+      },
+      {
+        "name": "Securing the DB",
+        "path": "storage-deep-dive/securingDb.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "11. Testing",
+    "path": "",
+    "files": [
+      {
+        "name": "Unit Testing",
+        "path": "testing/UnitTesting.md"
+      },
+      {
+        "name": "Integration Testing",
+        "path": "testing/IntegrationTesting.md"
+      },
+      {
+        "name": "UI Testing",
+        "path": "testing/UITesting.md"
+      },
+      {
+        "name": "Interview QnA (Testing & Security)",
+        "path": "testing/interview.md"
+      }
+    ],
+    "is_root": false
+  },
+  {
+    "name": "12. Reverse Engineering",
     "path": "",
     "files": [
       {

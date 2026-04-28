@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kotlin Coroutines Visualized</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --accent: #7c3aed; --accent2: #06b6d4; --accent3: #f59e0b;
+    --danger: #ef4444; --success: #22c55e;
+    --text: #e6edf3; --muted: #8b949e;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); overflow-x:hidden; }
+  h1 { text-align:center; padding:40px 20px 10px; font-size:2rem; font-weight:800; background:linear-gradient(135deg,#7c3aed,#06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .subtitle { text-align:center; color:var(--muted); margin-bottom:40px; font-size:0.95rem; }
+
+  .tabs { display:flex; justify-content:center; gap:8px; flex-wrap:wrap; padding:0 20px 30px; }
+  .tab { padding:10px 20px; border:1px solid var(--border); border-radius:50px; cursor:pointer; font-size:0.85rem; font-weight:600; transition:all .3s; background:var(--surface); color:var(--muted); }
+  .tab.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+  .scene { display:none; max-width:900px; margin:0 auto; padding:0 20px 60px; }
+  .scene.active { display:block; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; margin-bottom:24px; }
+  .card h2 { font-size:1.2rem; font-weight:700; margin-bottom:12px; }
+  .card p { color:var(--muted); font-size:0.9rem; line-height:1.7; }
+
+  /* Timeline */
+  .timeline { position:relative; margin:20px 0; }
+  .tl-label { font-size:0.75rem; color:var(--muted); margin-bottom:6px; }
+  .tl-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .tl-name { font-size:0.8rem; width:110px; flex-shrink:0; color:var(--text); font-family:'JetBrains Mono',monospace; }
+  .tl-track { flex:1; background:#1c2128; border-radius:6px; height:32px; position:relative; overflow:hidden; }
+  .tl-block { position:absolute; top:4px; height:24px; border-radius:4px; display:flex; align-items:center; padding:0 8px; font-size:0.72rem; font-weight:600; white-space:nowrap; opacity:0; }
+  .tl-block.animate { animation:slide-in .6s ease forwards; }
+  @keyframes slide-in { from{opacity:0;transform:scaleX(0);transform-origin:left} to{opacity:1;transform:scaleX(1)} }
+
+  .block-main { background:#7c3aed; color:#fff; }
+  .block-io { background:#06b6d4; color:#000; }
+  .block-suspend { background:#1c2128; border:1px dashed #30363d; color:var(--muted); }
+  .block-danger { background:#ef4444; color:#fff; }
+  .block-thread { background:#f59e0b; color:#000; }
+
+  /* Code */
+  pre { background:#010409; border:1px solid var(--border); border-radius:10px; padding:20px; overflow-x:auto; font-family:'JetBrains Mono',monospace; font-size:0.8rem; line-height:1.7; }
+  .kw { color:#ff7b72; } .fn { color:#d2a8ff; } .str { color:#a5d6ff; }
+  .cm { color:#8b949e; font-style:italic; } .tp { color:#ffa657; }
+
+  /* Comparison */
+  .compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media(max-width:640px){ .compare-grid{grid-template-columns:1fr;} }
+  .compare-card { border-radius:12px; padding:20px; }
+  .compare-card.bad { background:#1a0a0a; border:1px solid #ef4444; }
+  .compare-card.good { background:#0a1a0a; border:1px solid #22c55e; }
+  .compare-card h3 { font-size:1rem; font-weight:700; margin-bottom:10px; }
+  .compare-card.bad h3 { color:#ef4444; }
+  .compare-card.good h3 { color:#22c55e; }
+
+  /* Scope danger */
+  .leak-box { border:2px solid var(--danger); border-radius:12px; padding:20px; margin:16px 0; position:relative; }
+  .leak-badge { position:absolute; top:-12px; left:16px; background:var(--danger); color:#fff; padding:2px 12px; border-radius:20px; font-size:0.75rem; font-weight:700; }
+  .scope-good { border:2px solid var(--success); border-radius:12px; padding:20px; margin:16px 0; position:relative; }
+  .scope-badge { position:absolute; top:-12px; left:16px; background:var(--success); color:#000; padding:2px 12px; border-radius:20px; font-size:0.75rem; font-weight:700; }
+
+  /* Animated thread blocks */
+  .thread-vis { display:flex; flex-direction:column; gap:8px; margin:16px 0; }
+  .thread-row { display:flex; align-items:center; gap:10px; }
+  .thread-label { font-size:0.78rem; font-family:'JetBrains Mono',monospace; width:130px; flex-shrink:0; }
+  .thread-bar { flex:1; height:28px; background:#1c2128; border-radius:6px; overflow:hidden; position:relative; }
+  .fill { height:100%; border-radius:6px; display:flex; align-items:center; padding-left:10px; font-size:0.72rem; font-weight:600; }
+  .fill-blocked { background:#ef4444; color:#fff; }
+  .fill-free { background:#22c55e; color:#000; }
+
+  .btn { display:inline-flex; align-items:center; gap:6px; background:var(--accent); color:#fff; border:none; padding:10px 22px; border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer; transition:background .2s; margin-top:12px; }
+  .btn:hover { background:#6d28d9; }
+  .btn-cyan { background:var(--accent2); color:#000; }
+  .btn-cyan:hover { background:#0891b2; }
+
+  /* Steps */
+  .step { display:flex; gap:14px; align-items:flex-start; padding:14px 0; border-bottom:1px solid var(--border); }
+  .step:last-child { border-bottom:none; }
+  .step-num { width:28px; height:28px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:700; flex-shrink:0; }
+  .step-body { font-size:0.88rem; line-height:1.6; }
+  .step-body strong { color:var(--accent2); }
+
+  .pill { display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.75rem; font-weight:700; margin:0 3px; }
+  .pill-purple { background:#7c3aed22; color:#a78bfa; border:1px solid #7c3aed; }
+  .pill-cyan { background:#06b6d422; color:#67e8f9; border:1px solid #06b6d4; }
+  .pill-red { background:#ef444422; color:#fca5a5; border:1px solid #ef4444; }
+  .pill-green { background:#22c55e22; color:#86efac; border:1px solid #22c55e; }
+
+  .running-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; animation:pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
+</style>
+</head>
+<body>
+
+<h1>⚡ Kotlin Coroutines Visualized</h1>
+<p class="subtitle">Animated walkthroughs of coroutine behavior, thread comparison & scope best practices</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="show(0)">🧵 Thread vs Coroutine</div>
+  <div class="tab" onclick="show(1)">📡 launch &amp; async</div>
+  <div class="tab" onclick="show(2)">🌍 GlobalScope ⚠️</div>
+  <div class="tab" onclick="show(3)">🔄 Cancellation</div>
+  <div class="tab" onclick="show(4)">🚦 Dispatchers</div>
+</div>
+
+<!-- SCENE 0: Thread vs Coroutine -->
+<div class="scene active" id="scene0">
+  <div class="card">
+    <h2>❌ Traditional Thread Approach</h2>
+    <p>Each network call creates a new OS thread. Threads are expensive — each holds ~1MB of stack memory and the OS must context-switch between them.</p>
+    <div class="thread-vis">
+      <div class="thread-row"><div class="thread-label">Thread-1 (UI)</div><div class="thread-bar"><div class="fill fill-blocked" style="width:100%">BLOCKED — waiting for network...</div></div></div>
+      <div class="thread-row"><div class="thread-label">Thread-2 (Network)</div><div class="thread-bar"><div class="fill fill-blocked" style="width:100%">BLOCKED — waiting for DB...</div></div></div>
+      <div class="thread-row"><div class="thread-label">Thread-3 (DB)</div><div class="thread-bar"><div class="fill fill-free" style="width:100%">Doing actual work</div></div></div>
+    </div>
+    <pre><span class="cm">// Traditional Thread — callbacks, nested, hard to read</span>
+<span class="kw">fun</span> <span class="fn">loadUserProfile</span>() {
+    Thread {
+        <span class="kw">val</span> user = api.getUser() <span class="cm">// BLOCKS this thread</span>
+        Thread {
+            <span class="kw">val</span> posts = db.getPosts(user.id) <span class="cm">// BLOCKS another thread</span>
+            runOnUiThread { updateUI(user, posts) } <span class="cm">// Callback hell</span>
+        }.start()
+    }.start()
+}</pre>
+  </div>
+
+  <div class="card">
+    <h2>✅ Coroutine Approach</h2>
+    <p>One thread handles many coroutines. When a coroutine <em>suspends</em> (waiting for I/O), the thread is <strong>freed</strong> to execute other coroutines. No blocking, no waste.</p>
+    <div class="thread-vis">
+      <div class="thread-row"><div class="thread-label">Main Thread</div><div class="thread-bar"><div class="fill fill-free" style="width:100%">✓ Free — serves UI & other coroutines</div></div></div>
+      <div class="thread-row"><div class="thread-label">IO Thread</div><div class="thread-bar"><div class="fill fill-free" style="width:100%">✓ Free when awaiting response</div></div></div>
+    </div>
+    <pre><span class="cm">// Coroutine — sequential, readable, non-blocking</span>
+<span class="kw">fun</span> <span class="fn">loadUserProfile</span>() {
+    viewModelScope.<span class="fn">launch</span> {
+        <span class="kw">val</span> user = withContext(Dispatchers.IO) { api.getUser() } <span class="cm">// suspends, not blocks</span>
+        <span class="kw">val</span> posts = withContext(Dispatchers.IO) { db.getPosts(user.id) }
+        updateUI(user, posts) <span class="cm">// back on Main automatically</span>
+    }
+}</pre>
+
+    <div class="timeline" id="tl0">
+      <div class="tl-label">Execution timeline (click Run to animate)</div>
+      <div class="tl-row"><div class="tl-name">viewModelScope</div><div class="tl-track"><div class="tl-block block-main" style="left:0;width:100%" id="blk-scope">Coroutine Running</div></div></div>
+      <div class="tl-row"><div class="tl-name">Main Thread</div><div class="tl-track"><div class="tl-block block-main" style="left:0;width:20%" id="blk-main1">launch</div><div class="tl-block block-suspend" style="left:21%;width:55%" id="blk-main2">🔄 suspended (IO work)</div><div class="tl-block block-main" style="left:77%;width:23%" id="blk-main3">updateUI</div></div></div>
+      <div class="tl-row"><div class="tl-name">IO Thread</div><div class="tl-track"><div class="tl-block block-io" style="left:21%;width:55%" id="blk-io">api + db work</div></div></div>
+    </div>
+    <button class="btn" onclick="animateTL()">▶ Run Animation</button>
+  </div>
+</div>
+
+<!-- SCENE 1: launch vs async -->
+<div class="scene" id="scene1">
+  <div class="card">
+    <h2>🚀 launch — Fire and Forget</h2>
+    <p>Returns a <span class="pill pill-purple">Job</span>. No result. Exceptions propagate immediately to the scope.</p>
+    <pre><span class="kw">val</span> job: <span class="tp">Job</span> = viewModelScope.<span class="fn">launch</span> {
+    analyticsService.<span class="fn">logEvent</span>(<span class="str">"screen_open"</span>)
+    <span class="cm">// returns nothing — fire and forget</span>
+}
+
+<span class="cm">// You can cancel it</span>
+job.<span class="fn">cancel</span>()</pre>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-body">Coroutine starts immediately in <strong>viewModelScope</strong></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body">Executes <strong>logEvent()</strong> — suspends if needed</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body">Completes. Returns <strong>Job</strong> that you can <strong>.cancel()</strong></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>⚡ async — Concurrent Result</h2>
+    <p>Returns a <span class="pill pill-cyan">Deferred&lt;T&gt;</span>. Call <code>.await()</code> to get the result. Best for parallel operations.</p>
+    <pre><span class="cm">// Fetch two APIs concurrently — much faster than sequential</span>
+viewModelScope.<span class="fn">launch</span> {
+    <span class="kw">val</span> userDeferred = <span class="fn">async</span>(Dispatchers.IO) { api.<span class="fn">getUser</span>() }
+    <span class="kw">val</span> postsDeferred = <span class="fn">async</span>(Dispatchers.IO) { api.<span class="fn">getPosts</span>() }
+
+    <span class="cm">// Both run in parallel — total time = max(user, posts), not sum</span>
+    <span class="kw">val</span> user = userDeferred.<span class="fn">await</span>()
+    <span class="kw">val</span> posts = postsDeferred.<span class="fn">await</span>()
+    updateUI(user, posts)
+}</pre>
+    <div class="timeline">
+      <div class="tl-row"><div class="tl-name">async userDeferred</div><div class="tl-track"><div class="tl-block block-io animate" style="left:0;width:60%;animation-delay:.2s">api.getUser() — 600ms</div></div></div>
+      <div class="tl-row"><div class="tl-name">async postsDeferred</div><div class="tl-track"><div class="tl-block block-accent2 animate" style="left:0;width:40%;animation-delay:.4s;background:#f59e0b;color:#000">api.getPosts() — 400ms</div></div></div>
+      <div class="tl-row"><div class="tl-name">await both</div><div class="tl-track"><div class="tl-block block-main animate" style="left:61%;width:39%;animation-delay:1s">updateUI</div></div></div>
+    </div>
+    <p style="color:var(--success);font-size:0.85rem;margin-top:8px">✓ Total time: ~600ms (parallel) vs 1000ms (sequential)</p>
+  </div>
+</div>
+
+<!-- SCENE 2: GlobalScope -->
+<div class="scene" id="scene2">
+  <div class="card">
+    <h2 style="color:var(--danger)">⚠️ Why GlobalScope is Dangerous</h2>
+    <p>GlobalScope lives for the <strong>entire app lifetime</strong>. It is not tied to any component's lifecycle, causing memory leaks and zombie coroutines.</p>
+
+    <div class="leak-box">
+      <div class="leak-badge">⛔ MEMORY LEAK</div>
+      <pre><span class="cm">// User opens UserActivity → coroutine starts</span>
+<span class="kw">class</span> <span class="tp">UserActivity</span> : AppCompatActivity() {
+    <span class="kw">override fun</span> <span class="fn">onCreate</span>(...) {
+        GlobalScope.<span class="fn">launch</span> {  <span class="cm">// ⚠️ NOT tied to Activity lifecycle</span>
+            <span class="kw">val</span> data = api.<span class="fn">getHeavyData</span>() <span class="cm">// Takes 10 seconds</span>
+            updateUI(data) <span class="cm">// ⚠️ Activity may be dead here!</span>
+        }
+    }
+}
+<span class="cm">// User presses back → Activity destroyed</span>
+<span class="cm">// GlobalScope coroutine KEEPS RUNNING for 10 more seconds 💀</span>
+<span class="cm">// Then crashes trying to update a dead UI reference</span></pre>
+    </div>
+
+    <div class="scope-good">
+      <div class="scope-badge">✅ CORRECT</div>
+      <pre><span class="kw">class</span> <span class="tp">UserActivity</span> : AppCompatActivity() {
+    <span class="kw">override fun</span> <span class="fn">onCreate</span>(...) {
+        lifecycleScope.<span class="fn">launch</span> {  <span class="cm">// ✅ Tied to Activity lifecycle</span>
+            <span class="kw">val</span> data = api.<span class="fn">getHeavyData</span>()
+            updateUI(data) <span class="cm">// ✅ Safe — auto-cancelled if Activity dies</span>
+        }
+    }
+}
+<span class="cm">// User presses back → Activity destroyed → coroutine CANCELLED ✅</span></pre>
+    </div>
+
+    <div class="compare-grid" style="margin-top:20px">
+      <div class="compare-card bad">
+        <h3>⛔ GlobalScope</h3>
+        <ul style="font-size:0.85rem;color:var(--muted);line-height:2;padding-left:16px">
+          <li>Lives for the full app lifetime</li>
+          <li>Not cancelled on back press</li>
+          <li>Causes memory leaks</li>
+          <li>Can crash destroyed UI</li>
+          <li>Impossible to unit test</li>
+        </ul>
+      </div>
+      <div class="compare-card good">
+        <h3>✅ Structured Scopes</h3>
+        <ul style="font-size:0.85rem;color:var(--muted);line-height:2;padding-left:16px">
+          <li><code>viewModelScope</code> — tied to ViewModel</li>
+          <li><code>lifecycleScope</code> — tied to Activity/Fragment</li>
+          <li>Auto-cancelled when owner dies</li>
+          <li>Zero memory leaks</li>
+          <li>Easily testable with TestScope</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCENE 3: Cancellation -->
+<div class="scene" id="scene3">
+  <div class="card">
+    <h2>🔄 Cooperative Cancellation</h2>
+    <p>Cancellation in coroutines is <strong>cooperative</strong>. A coroutine must periodically check if it's been cancelled. Suspension points (like <code>delay</code>) check automatically.</p>
+    <pre><span class="kw">val</span> job = viewModelScope.<span class="fn">launch</span> {
+    <span class="kw">for</span> (i <span class="kw">in</span> 1..100) {
+        <span class="cm">// ✅ isActive check — cooperative with cancellation</span>
+        <span class="kw">if</span> (!isActive) <span class="kw">return</span>@launch
+
+        processChunk(i) <span class="cm">// heavy CPU work</span>
+    }
+}
+
+<span class="cm">// Later — user navigates away</span>
+job.<span class="fn">cancel</span>() <span class="cm">// signals cancellation — coroutine will stop at next isActive check</span></pre>
+
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-body"><strong>job.cancel()</strong> is called — sets cancellation flag on the Job</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body">Next <strong>suspension point</strong> (delay, yield, withContext) throws <strong>CancellationException</strong></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body">For CPU loops, check <strong>isActive</strong> manually — it's cooperative, not forced</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body"><strong>try/finally</strong> still runs — you can clean up resources safely</div></div>
+    </div>
+
+    <pre style="margin-top:16px"><span class="cm">// Always wrap in try/finally for cleanup</span>
+viewModelScope.<span class="fn">launch</span> {
+    <span class="kw">try</span> {
+        <span class="fn">delay</span>(5000) <span class="cm">// auto-checks cancellation here</span>
+        updateUI()
+    } <span class="kw">finally</span> {
+        <span class="cm">// ✅ This always runs — close streams, hide loaders etc.</span>
+        hideLoadingSpinner()
+    }
+}</pre>
+  </div>
+</div>
+
+<!-- SCENE 4: Dispatchers -->
+<div class="scene" id="scene4">
+  <div class="card">
+    <h2>🚦 Dispatchers — Where Coroutines Run</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num" style="background:#7c3aed">M</div>
+        <div class="step-body">
+          <strong>Dispatchers.Main</strong> — UI thread only<br>
+          <span style="color:var(--muted)">Use for: updating views, observing StateFlow, Compose recompositions</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:#06b6d4;color:#000">IO</div>
+        <div class="step-body">
+          <strong>Dispatchers.IO</strong> — thread pool (up to 64 threads)<br>
+          <span style="color:var(--muted)">Use for: Retrofit calls, Room queries, file read/write, SharedPrefs</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:#f59e0b;color:#000">D</div>
+        <div class="step-body">
+          <strong>Dispatchers.Default</strong> — CPU thread pool (= CPU core count)<br>
+          <span style="color:var(--muted)">Use for: JSON parsing, image processing, sorting large lists</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:#22c55e;color:#000">U</div>
+        <div class="step-body">
+          <strong>Dispatchers.Unconfined</strong> — runs in caller's thread (testing only)<br>
+          <span style="color:var(--muted)">Avoid in production — unpredictable thread behavior</span>
+        </div>
+      </div>
+    </div>
+
+    <pre style="margin-top:16px"><span class="cm">// Pattern: start on Main, switch to IO, return to Main</span>
+viewModelScope.<span class="fn">launch</span> {                  <span class="cm">// starts on Main</span>
+    showLoading()                              <span class="cm">// Main — updates UI</span>
+
+    <span class="kw">val</span> result = withContext(Dispatchers.IO) {
+        repository.<span class="fn">fetchData</span>()              <span class="cm">// IO — network call</span>
+    }                                          <span class="cm">// automatically back on Main</span>
+
+    hideLoading()                              <span class="cm">// Main — updates UI</span>
+    render(result)
+}</pre>
+    <p style="color:var(--success);font-size:0.85rem;margin-top:12px">✓ <code>withContext</code> automatically restores the original dispatcher after the block finishes.</p>
+  </div>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.scene').forEach((s,i) => s.classList.toggle('active', i===n));
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===n));
+}
+
+function animateTL() {
+  const ids = ['blk-scope','blk-main1','blk-main2','blk-main3','blk-io'];
+  const delays = [0, 100, 500, 1400, 500];
+  ids.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('animate');
+    void el.offsetWidth;
+    setTimeout(() => el.classList.add('animate'), delays[i]);
+  });
+}
+</script>
+</body>
+</html>
