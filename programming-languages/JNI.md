@@ -1,6 +1,6 @@
 # JNI (Java Native Interface) & NDK
 
-> 📖 **[View JNI Guide](jni.html){target="_blank"}** - Interactive HTML version
+> 📖 **[View JNI Guide](jni.html)- Interactive HTML version
 
 ## Definition
 JNI is the bridge that allows Kotlin/Java (running in ART) to call functions in native C/C++ libraries. The **NDK (Native Development Kit)** is the set of tools used to compile that C/C++ code into[...]
