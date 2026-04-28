@@ -3,14 +3,8 @@
     "name": "Home",
     "path": "",
     "files": [
-      {
-        "name": "What's in the Book",
-        "path": "README.md"
-      },
-      {
-        "name": "⚡ Interview Cheat Sheet (Final Glance)",
-        "path": "Interview_CheatSheet.md"
-      }
+      {"name": "What's in the Book", "path": "README.md"},
+      {"name": "⚡ Interview Cheat Sheet (Final Glance)", "path": "Interview_CheatSheet.md"}
     ],
     "is_root": true
   },
@@ -18,307 +12,148 @@
     "name": "1. System Architecture & Structure",
     "path": "",
     "files": [
-      {
-        "name": "Platform Architecture",
-        "path": "android-architecture/PlatformArchitecture.md"
-      },
-      {
-        "name": "Android Manifest",
-        "path": "android-manifest/Manifest.md"
-      },
-      {
-        "name": "App Structure (MVVM vs MVI)",
-        "path": "android-architecture/Architecture.md"
-      },
-      {
-        "name": "Interview QnA (Platform Architecture)",
-        "path": "android-architecture/Interview.md"
-      },
-      {
-        "name": "Interview QnA (Structure)",
-        "path": "app-structure/Interview.md"
-      }
+      {"name": "Platform Architecture", "path": "android-architecture/PlatformArchitecture.md"},
+      {"name": "App Structure (MVVM vs MVI)", "path": "android-architecture/Architecture.md"},
+      {"name": "Build & App Structure", "path": "android-architecture/AppStructure.md"},
+      {"name": "Interview QnA (Architecture)", "path": "android-architecture/Interview.md"}
     ],
     "is_root": false
   },
   {
-    "name": "2. The Big Four (App Components)",
+    "name": "2. Build, Manifest & Resources",
+    "path": "build-manifest-resources",
+    "files": [
+      {"name": "Android Manifest", "path": "build-manifest-resources/Manifest.md"},
+      {"name": "Resource Analysis", "path": "build-manifest-resources/Resources.md"}
+    ],
+    "is_root": false
+  },
+  {
+    "name": "3. The Big Four (App Components)",
     "path": "",
     "files": [
-      {
-        "name": "Activity",
-        "path": "android-components/activity/Activity.md"
-      },
-      {
-        "name": "Intents",
-        "path": "intents/Intents.md"
-      },
-      {
-        "name": "Services",
-        "path": "android-components/service/a-service/Service.md"
-      },
-      {
-        "name": "Broadcast Receivers",
-        "path": "android-components/receiver/BroadcastReceiver.md"
-      },
-      {
-        "name": "Content Providers",
-        "path": "android-components/content-provider/ContentProvider.md"
-      },
-      {
-        "name": "WorkManager",
-        "path": "android-components/service/workmanger/workmanager.md"
-      },
-      {
-        "name": "App Without An Activity ?",
-        "path": "android-components/service/serviceApp.md"
-      },
-      {
-        "name": "Service vs WorkManager",
-        "path": "android-components/service/service-workmanager-jobscheduler.md"
-      },
-      {
-        "name": "Service Security Risks",
-        "path": "android-components/service/a-service/security-risks.md"
-      },
-      {
-        "name": "Interview QnA (Activity)",
-        "path": "android-components/activity/interview.md"
-      },
-      {
-        "name": "Interview QnA (Services)",
-        "path": "android-components/service/a-service/interview.md"
-      },
-      {
-        "name": "Interview QnA (Intents)",
-        "path": "intents/Interview.md"
-      }
+      {"name": "Activity", "path": "android-components/activity/Activity.md"},
+      {"name": "Intents", "path": "intents/Intents.md"},
+      {"name": "Services", "path": "android-components/service/a-service/Service.md"},
+      {"name": "Broadcast Receivers", "path": "android-components/receiver/BroadcastReceiver.md"},
+      {"name": "BroadcastReceiver Scenarios", "path": "android-components/receiver/scenrio.md"},
+      {"name": "Content Providers", "path": "android-components/content-provider/ContentProvider.md"},
+      {"name": "Content Provider Example", "path": "android-components/content-provider/example.md"},
+      {"name": "WorkManager", "path": "android-components/service/workmanger/workmanager.md"},
+      {"name": "App Without An Activity ?", "path": "android-components/service/serviceApp.md"},
+      {"name": "Service vs WorkManager", "path": "android-components/service/service-workmanager-jobscheduler.md"},
+      {"name": "Service Security Risks", "path": "android-components/service/a-service/security-risks.md"},
+      {"name": "Interview QnA (Components)", "path": "android-components/Interview.md"}
     ],
     "is_root": false
   },
   {
-    "name": "3. Programming Languages",
+    "name": "4. Programming Languages",
     "path": "programming-languages",
     "files": [
-      {
-        "name": "Java Concepts",
-        "path": "programming-languages/JavaConcepts.md"
-      },
-      {
-        "name": "Kotlin Concepts",
-        "path": "programming-languages/KotlinConcepts.md"
-      },
-      {
-        "name": "Interoperability",
-        "path": "programming-languages/Interoperability.md"
-      },
-      {
-        "name": "JNI (Native Interface)",
-        "path": "programming-languages/JNI.md"
-      },
-      {
-        "name": "Interview QnA",
-        "path": "programming-languages/Interview.md"
-      }
+      {"name": "Java Concepts", "path": "programming-languages/JavaConcepts.md"},
+      {"name": "Java Mechanism", "path": "programming-languages/JavaMechanism.md"},
+      {"name": "Kotlin Concepts", "path": "programming-languages/KotlinConcepts.md"},
+      {"name": "Kotlin vs Java Concepts", "path": "programming-languages/KotlinJavaConcepts.md"},
+      {"name": "Interoperability", "path": "programming-languages/Interoperability.md"},
+      {"name": "JNI (Native Interface)", "path": "programming-languages/JNI.md"},
+      {"name": "Interview QnA", "path": "programming-languages/Interview.md"}
     ],
     "is_root": false
   },
   {
-    "name": "4. Storage & Permissions",
-    "path": "",
+    "name": "5. Storage",
+    "path": "storage-deep-dive",
     "files": [
-      {
-        "name": "Storage Methods",
-        "path": "storage-deep-dive/Storage.md"
-      },
-      {
-        "name": "Room Database Deep Dive",
-        "path": "storage-deep-dive/Room-deep-dive.md"
-      },
-      {
-        "name": "SQLite Deep Dive",
-        "path": "storage-deep-dive/SQLite.md"
-      },
-      {
-        "name": "Permissions Deep-Dive",
-        "path": "android-manifest/permissions/Permissions.md"
-      },
-      {
-        "name": "Interview QnA (Storage)",
-        "path": "storage-deep-dive/Interview.md"
-      },
-      {
-        "name": "Interview QnA (Permissions)",
-        "path": "android-manifest/Interview.md"
-      }
+      {"name": "Storage Methods", "path": "storage-deep-dive/Storage.md"},
+      {"name": "File Handling", "path": "storage-deep-dive/FileHandling.md"},
+      {"name": "Room Database Deep Dive", "path": "storage-deep-dive/Room-deep-dive.md"},
+      {"name": "SQLite Deep Dive", "path": "storage-deep-dive/SQLite.md"},
+      {"name": "Firebase Storage", "path": "storage-deep-dive/Firebase.md"},
+      {"name": "Interview QnA (Storage)", "path": "storage-deep-dive/Interview.md"}
     ],
     "is_root": false
   },
   {
-    "name": "5. Performance",
-    "path": "",
+    "name": "6. Performance & UI",
+    "path": "android-performance",
     "files": [
-       {
-        "name": "Performance Concepts",
-        "path": "performance-optimisation/concepts.md"
-      },
-      {
-        "name": "Memory Management",
-        "path": "android-performance/MemoryManagement.md"
-      },
-      {
-        "name": "UI Rendering",
-        "path": "android-performance/UIRendering.md"
-      },
-      {
-        "name": "Code Obfuscation",
-        "path": "obfuscate/ProguardR8.md"
-      },
-      {
-        "name": "Interview QnA (WebView)",
-        "path": "android-webview/interview.md"
-      },
-      {
-        "name": "Interview QnA (Performance)",
-        "path": "android-performance/Interview.md"
-      },
-      {
-        "name": "Interview QnA (Obfuscation)",
-        "path": "obfuscate/Interview.md"
-      }
+      {"name": "Performance Concepts", "path": "performance-optimisation/concepts.md"},
+      {"name": "Memory Management", "path": "android-performance/MemoryManagement.md"},
+      {"name": "UI Rendering", "path": "android-performance/UIRendering.md"},
+      {"name": "Interview QnA (Performance)", "path": "android-performance/Interview.md"}
     ],
     "is_root": false
   },
   {
-    "name": "6. Architectural Patterns",
+    "name": "7. Security & Permissions",
+    "path": "security",
+    "files": [
+      {"name": "Android Security", "path": "security/Security.md"},
+      {"name": "Permissions Deep-Dive", "path": "security/Permissions.md"},
+      {"name": "WebView Security", "path": "security/WebView.md"},
+      {"name": "Code Obfuscation", "path": "security/ProguardR8.md"},
+      {"name": "Securing the DB", "path": "storage-deep-dive/securingDb.md"},
+      {"name": "Interview QnA (Security)", "path": "security/Interview.md"}
+    ],
+    "is_root": false
+  },
+  {
+    "name": "8. Architectural Patterns",
     "path": "android-jetpack",
     "files": [
-      {
-        "name": "Dependency Injection",
-        "path": "android-jetpack/DependencyInjection.md"
-      },
-      {
-        "name": "Interview QnA",
-        "path": "android-jetpack/Interview.md"
-      }
+      {"name": "Dependency Injection", "path": "android-jetpack/DependencyInjection.md"},
+      {"name": "Interview QnA", "path": "android-jetpack/Interview.md"}
     ],
     "is_root": false
   },
   {
-    "name": "7. Jetpack Compose",
-    "path": "",
+    "name": "9. Jetpack Compose",
+    "path": "jetpack-compose",
     "files": [
-      {
-        "name": "Compose Concepts",
-        "path": "jetpack-compose/ComposeConcepts.md"
-      }
+      {"name": "Compose Concepts", "path": "jetpack-compose/ComposeConcepts.md"}
     ],
     "is_root": false
   },
   {
-    "name": "8. Networking",
-    "path": "",
+    "name": "10. Networking",
+    "path": "networking",
     "files": [
-      {
-        "name": "Retrofit",
-        "path": "networking/retrofit.md"
-      },
-      {
-        "name": "Ktor",
-        "path": "networking/ktor.md"
-      }
+      {"name": "Retrofit", "path": "networking/retrofit.md"},
+      {"name": "Ktor", "path": "networking/ktor.md"}
     ],
     "is_root": false
   },
   {
-    "name": "9. System Design (HLD)",
-    "path": "",
+    "name": "11. System Design (HLD)",
+    "path": "system-design",
     "files": [
-      {
-        "name": "Core Concepts",
-        "path": "system-design/concepts.md"
-      },
-      {
-        "name": "Example Systems (Interview)",
-        "path": "system-design/interview.md"
-      }
+      {"name": "Core Concepts", "path": "system-design/concepts.md"},
+      {"name": "Example Systems (Interview)", "path": "system-design/interview.md"}
     ],
     "is_root": false
   },
   {
-    "name": "10. Security",
-    "path": "",
+    "name": "12. Testing",
+    "path": "testing",
     "files": [
-      {
-        "name": "Android Security",
-        "path": "security/Security.md"
-      },
-       {
-        "name": "WebView Security",
-        "path": "android-webview/WebView.md"
-      },
-      {
-        "name": "Securing the DB",
-        "path": "storage-deep-dive/securingDb.md"
-      }
+      {"name": "Unit Testing", "path": "testing/UnitTesting.md"},
+      {"name": "Integration Testing", "path": "testing/IntegrationTesting.md"},
+      {"name": "UI Testing", "path": "testing/UITesting.md"},
+      {"name": "Interview QnA (Testing)", "path": "testing/interview.md"}
     ],
     "is_root": false
   },
   {
-    "name": "11. Testing",
-    "path": "",
+    "name": "13. Reverse Engineering",
+    "path": "reverse-engg",
     "files": [
-      {
-        "name": "Unit Testing",
-        "path": "testing/UnitTesting.md"
-      },
-      {
-        "name": "Integration Testing",
-        "path": "testing/IntegrationTesting.md"
-      },
-      {
-        "name": "UI Testing",
-        "path": "testing/UITesting.md"
-      },
-      {
-        "name": "Interview QnA (Testing & Security)",
-        "path": "testing/interview.md"
-      }
-    ],
-    "is_root": false
-  },
-  {
-    "name": "12. Reverse Engineering",
-    "path": "",
-    "files": [
-      {
-        "name": "Build & App Structure",
-        "path": "app-structure/AppStructure.md"
-      },
-      {
-        "name": "Resource Analysis",
-        "path": "android-manifest/resources/Resources.md"
-      },
-      {
-        "name": "APK Analysis",
-        "path": "app-structure/apkAnalasys.md"
-      },
-      {
-        "name": "Guide To App",
-        "path": "reverse-engg/guideToApp.md"
-      },
-      {
-        "name": "ReverseEngg an App Using JADX",
-        "path": "reverse-engg/reverseEnggApp.md"
-      },
-      {
-        "name": "ReverseEngg an Obfuscated App Using JADX",
-        "path": "reverse-engg/reverseEnggObfuscated.md"
-      },
-      {
-        "name": "Interview QnA (Reverse Engineering)",
-        "path": "reverse-engg/Interview.md"
-      }
+      {"name": "APK Analysis", "path": "reverse-engg/apkAnalasys.md"},
+      {"name": "Guide To App", "path": "reverse-engg/guideToApp.md"},
+      {"name": "ReverseEngg an App Using JADX", "path": "reverse-engg/reverseEnggApp.md"},
+      {"name": "ReverseEngg an Obfuscated App Using JADX", "path": "reverse-engg/reverseEnggObfuscated.md"},
+      {"name": "Google Play Analysis", "path": "reverse-engg/GooglePlayAnalysis.md"},
+      {"name": "Interview QnA (Reverse Engineering)", "path": "reverse-engg/Interview.md"}
     ],
     "is_root": false
   }

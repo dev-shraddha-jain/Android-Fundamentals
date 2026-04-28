@@ -1,4 +1,6 @@
-# Interview QnA: Android Activity Lifecycle
+# Interview QnA: The Big Four (App Components)
+
+## Part 1: Activity Lifecycle
 
 ### Q1. [How Mechanism] What exactly happens during a Configuration Change (e.g., Rotation)?
 **The Mechanism:**
@@ -33,6 +35,7 @@
 *   Focus on the **Performance** and **UX** impact.
 *   Explain that `onPause` should be kept as lightweight as possible.
 
+---
 
 ### Q4. [Process Creation] When you launch the app, what happens under the hood?
 **The Answer:**
@@ -40,6 +43,8 @@
 *   **ActivityThread:** The new process starts its `ActivityThread.main()` which sets up the main Looper.
 *   **Binding & Loading:** The system binds to the app and loads the app's classes via the ClassLoader.
 *   **Lifecycle Start:** `Application.onCreate()` runs, followed by the new Activity's `onCreate()`, `onStart()`, and `onResume()`.
+
+---
 
 ### Q5. [System Kill] What happens to your app if the Android System kills the process while it is in the background?
 
@@ -53,6 +58,7 @@
 *   Highlight the difference between **UI State** (`onSaveInstanceState`) and **Business Data** (Room/Repository).
 *   Explain that the System Kill is **unavoidable** in low-memory situations.
 
+---
 
 ### Q6. [Lifecycle vs Memory] When would you use `onPause()` vs `onStop()` for saving data?
 **The Answer:**
@@ -62,6 +68,7 @@
 **How to Answer:**
 *   Emphasize that **`onStop()`** is the preferred place for long-running save operations because the system gives the process more time before killing it.
 
+---
 
 ### Q7. [Activity Creation] Why do we call super.onCreate(savedInstanceState) first in Android Activities?
 
@@ -74,6 +81,8 @@
 *   Explain that it is mandatory for **System Integration**.
 *   Mention that it handles the restoration of saved state and initializes the Activity's core components.
 
+---
+
 ### Q8. [Memory] How can you prevent your Activity from being killed by the OS when it goes into the background?
 
 **The Answer:**
@@ -85,6 +94,8 @@
 *   Mention the `startForeground(notificationId, notification)` method.
 *   Add a caveat: Users might dislike intrusive notifications; use this only when necessary.
 
+---
+
 ### Q9. [UI/UX] Why is it important to save UI state, and how does `ViewModel` help?
 
 **The Answer:**
@@ -95,6 +106,7 @@
 *   Explain that `ViewModel` lives **longer** than the Activity instance.
 *   Differentiate between **UI State** (stored in `ViewModel`) and **Business Data** (stored in Repository/DB).
 
+---
 
 ### Q10. [Multitasking] How do you handle multiple instances of the same Activity (e.g., launching the same app twice)?
 
@@ -107,6 +119,8 @@
 *   Explain the **Launch Modes** (`standard`, `singleTop`, `singleTask`, `singleInstance`).
 *   Give a practical example: `singleTop` is great for notifications to avoid duplicates in the back stack.
 
+---
+
 ### Q11. [Communication] How do you pass data between Activities? (Preferable Way)
 
 **The Answer:**
@@ -116,6 +130,8 @@
 **How to Answer:**
 *   Distinguish between **One-time data transfer** (Intent) and **Shared state** (ViewModel).
 *   Strongly recommend **ViewModel** for architecture and testability.
+
+---
 
 ### Q12. [Lifecycle] Explain the Activity states and the meaning of "State Preservation".
 
@@ -130,6 +146,7 @@
 *   Explain that the `Bundle` is mainly for **UI State** (e.g., text in an EditText), **not** business logic.
 *   Emphasize using **ViewModel** to preserve data beyond the Activity's lifecycle.
 
+---
 
 ### Q13. [Performance] How do you optimize Activity startup time?
 
@@ -142,6 +159,7 @@
 **How to Answer:**
 *   Focus on **Layout Performance** (`ConstraintLayout`) and **SDK Initialization**.
 
+---
 
 ### Q14. [Best Practices] When should you call `finish()` vs `finishAffinity()`?
 
@@ -153,6 +171,7 @@
 *   **`finish()`:** When you want to go back to the previous screen.
 *   **`finishAffinity()`:** When you want to clear the entire task (e.g., after a logout or completing a wizard).
 
+---
 
 ### Q15. [Internals] What is the difference between `Activity` and `Context`? Can an Activity be a `Context`?
 
@@ -165,6 +184,7 @@
 *   Clarify that `Activity` **extends** `ContextThemeWrapper` (which extends `Context`).
 *   Explain that when you need a context *tied to a specific UI lifecycle* (e.g., for animations), you use the Activity Context. When you need a *global application context*, you use `ApplicationContext`.
 
+---
 
 ### Q16. [Activity Results] How do you handle results from launched activities (e.g., getting an image from the camera)?
 
@@ -177,6 +197,7 @@
 *   Show the pattern: `val launcher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri -> ... }`.
 *   Explain that it's safer and decouples the logic from the lifecycle.
 
+---
 
 ### Q17. [Architecture] How do you implement MVVM with Activities and ViewModels?
 
@@ -188,63 +209,91 @@ In a standard MVVM implementation:
 
 **Key Benefit:** This ensures that the Activity remains "dumb" and lifecycle-aware, while the business logic and state are preserved during configuration changes by the ViewModel.
 
+---
 
-### Q18.Explain why Android uses Zygote process instead of creating every app process from scratch.
-Include:
-- memory benefits
-- startup speed
-- copy-on-write
-- ART/Dalvik preload
-- security isolation
-Answer briefly but technically.
+### Q18. Explain why Android uses Zygote process instead of creating every app process from scratch.
 
 **The Answer**
 Android uses **Zygote** as a pre-warmed parent process from which app processes are forked.
 
-### Key Reasons
+**Key Reasons:**
+*   **Faster App Startup:** Core runtime/classes are already loaded.
+*   **Memory Efficiency:** Shared read-only memory pages reused across apps.
+*   **Copy-On-Write (COW):** Only modified pages are copied, reducing RAM.
+*   **Security Isolation:** Each app runs in separate Linux process with unique UID.
 
-* **Faster App Startup**
-
-  * Core Android runtime and common classes are already loaded in Zygote.
-  * New app process is created using `fork()` instead of bootstrapping JVM/runtime from zero.
-
-* **Memory Efficiency**
-
-  * Shared read-only memory pages can be reused across many apps.
-  * Common framework classes/resources don’t need duplicate copies in each process.
-
-* **Copy-On-Write (COW)**
-
-  * After `fork()`, child initially shares parent memory pages.
-  * Only modified pages are copied, reducing RAM usage.
-
-* **Preloaded ART Runtime / Framework**
-
-  * Zygote preloads:
-
-    * framework classes
-    * resources
-    * fonts
-    * common libraries
-  * This avoids repeating heavy initialization for every app.
-
-* **Security Isolation**
-
-  * Even though forked from same parent, each app runs:
-
-    * separate Linux process
-    * unique UID
-    * sandboxed storage
-    * isolated memory space
-
-* **Lower CPU / Battery Cost**
-
-  * Reusing initialized runtime reduces repeated work and CPU cycles.
-
----
-
-## One-Line Interview Summary
-
+**One-Line Interview Summary:**
 “Android uses Zygote to fork pre-initialized app processes, giving faster launch times, lower memory usage through copy-on-write, and still preserving per-app sandbox isolation.”
 
 ---
+
+## Part 2: Services
+
+### Q1. [How Mechanism] What is the difference between `onStartCommand` and `onBind`?
+**The Mechanism:**
+*   **`onStartCommand`**: Triggered by `startService()`. The service runs independently of the caller until it is explicitly stopped.
+*   **`onBind`**: Triggered by `bindService()`. It provides a client-server interface (IBinder) allowing the caller to interact with the service. The service dies when all clients unbind.
+
+**How to Answer:**
+*   Define `startService` as "Fire and Forget".
+*   Define `bindService` as a "Conversation".
+*   Mention that a service can be both started AND bound at the same time.
+
+---
+
+### Q2. [Tricky] What happens if you perform a network request inside `onStartCommand`?
+**The Answer:**
+*   The app will likely crash with a `NetworkOnMainThreadException`.
+*   A Service runs on the **Main Thread** by default.
+
+**How to Answer:**
+*   Correct the common misconception that Services are automatically background threads.
+*   Suggest the fix: Use an `IntentService` (deprecated) or a regular `Service` with **Coroutines** or a separate thread.
+
+---
+
+### Q3. [What If] What if the system kills a Foreground Service due to extreme memory pressure?
+**The Scenario:**
+*   The system will try to restart the service once memory is freed, but ONLY if it returned `START_STICKY` or `START_REDELIVER_INTENT` in `onStartCommand`.
+
+**How to Answer:**
+*   Mention that Foreground Services have high priority and are rarely killed.
+*   Explain the importance of the return value in `onStartCommand` for reliability.
+
+---
+
+## Part 3: Intents
+
+### Q1. [How Mechanism] How does "Intent Resolution" work for Implicit Intents?
+**The Mechanism:**
+*   When an Implicit Intent is fired, the `PackageManager` queries all installed apps for matching `<intent-filter>` declarations.
+*   It filters based on three criteria: **Action**, **Data (URI/MIME Type)**, and **Category**.
+*   If multiple apps match, the system shows the "App Chooser".
+
+**How to Answer:**
+*   Distinguish between Explicit (target class known) and Implicit (target action known).
+*   Mention that the `DEFAULT` category is required for almost all implicit intents to be resolved.
+*   Explain that this is a form of late-binding in the Android OS.
+
+---
+
+### Q2. [Tricky] Can you pass a 10MB Bitmap through an Intent?
+**The Answer:**
+*   Technically, yes, but you **should not**.
+*   Intents have a shared buffer limit (TransactionTooLargeException) across the whole system, usually around **1MB**.
+*   Trying to pass a large object will cause the app to crash during the transaction.
+
+**How to Answer:**
+*   Identify the `TransactionTooLargeException` as the main bottleneck.
+*   Suggest the senior-level solution: Save the bitmap to a file or a shared cache and pass the **URI** instead.
+
+---
+
+### Q3. [What If] What if you use a PendingIntent with `FLAG_IMMUTABLE`?
+**The Scenario:**
+*   The system or another app that receives the PendingIntent cannot modify the underlying Intent's extra data.
+*   This is a security best practice introduced in Android 12 to prevent "Intent Redirection" attacks.
+
+**How to Answer:**
+*   Explain that `FLAG_IMMUTABLE` is now the default/required flag for most cases.
+*   Mention that you only use `FLAG_MUTABLE` if the target app (like a Notification or Geofence) needs to fill in specific details (like a timestamp or location).

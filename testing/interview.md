@@ -1,4 +1,4 @@
-# Testing & Security — Interview Q&A
+# Testing — Interview Q&A
 
 ---
 
@@ -25,35 +25,3 @@
 ### Q4. How do you test Room DAOs?
 
 > Use `Room.inMemoryDatabaseBuilder()` in an `AndroidJUnit4` test. An in-memory database is real SQLite — it validates your actual queries. Call `allowMainThreadQueries()` only in tests. Use Turbine to test `Flow<List<T>>` DAOs so you can observe multiple emissions as data changes.
-
----
-
-## Security Interview Questions
-
-### Q1. Where do you store auth tokens?
-
-> Access tokens (short-lived, 15 min) live in-memory in the ViewModel — they're cleared when the app is killed. Refresh tokens (long-lived) are stored in `EncryptedSharedPreferences` backed by an AES-256-GCM key in the Android Keystore. We never store any token in plain `SharedPreferences`, a file, or `BuildConfig`.
-
----
-
-### Q2. How does SSL Pinning work and what are its risks?
-
-> SSL Pinning hardcodes the server's certificate public key hash in the app using `CertificatePinner`. On each HTTPS handshake, OkHttp verifies the server's presented certificate matches the pinned hash — rejecting any other certificate, even a valid CA-signed one. The main risk is **certificate rotation**: if the server renews its certificate and the app's pins aren't updated before the old cert expires, the app loses all connectivity. Mitigation: always pin **two hashes** (current + backup), set an expiry, and use Network Security Config XML which can be updated via OTA without a full release.
-
----
-
-### Q3. What is the Play Integrity API and when do you use it?
-
-> The Play Integrity API provides **server-side attestation** from Google. The client app requests a signed token from Google, then your backend verifies it by calling Google's API. The response gives three verdicts: is the app signed by your key (`APP_INTEGRITY`), is the device genuine Android with Google Play (`DEVICE_INTEGRITY`), and is the user licensed (`ACCOUNT_DETAILS`). I use it before high-value actions like payment confirmation or account creation — it cannot be bypassed client-side since verification happens server-to-server.
-
----
-
-### Q4. How do you prevent reverse engineering of your APK?
-
-> **R8 obfuscation** renames classes and methods to meaningless single characters. **ProGuard rules** strip debug logs, keep serialization models intact, and protect Hilt-generated classes. For native code, we use NDK with `.so` files which are harder to decompile than DEX. Beyond obfuscation, we use **tamper detection** (checking the APK signature at runtime) and **Play Integrity API** for server-side validation, since obfuscation alone can be defeated by a patient attacker.
-
----
-
-### Q5. How do you detect a rooted device?
-
-> Client-side: check for `/system/bin/su`, build tags containing `test-keys`, known root manager package names (Magisk, SuperSU), and writable system partitions. However, Magisk Hide can bypass all of these checks. The real solution is **Play Integrity API** — the `MEETS_DEVICE_INTEGRITY` verdict is computed on Google's servers and is significantly harder to spoof. We use both layers: client-side for UX (warn the user early) and server-side for enforcement (block the transaction).
