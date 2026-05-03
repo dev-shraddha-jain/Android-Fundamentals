@@ -13,6 +13,7 @@
     "path": "",
     "files": [
       {"name": "Platform Architecture", "path": "android-architecture/PlatformArchitecture.md"},
+      {"name": "Binder IPC Deep Dive", "path": "android-architecture/BinderDeepDive.md"},
       {"name": "App Structure (MVVM vs MVI)", "path": "android-architecture/Architecture.md"},
       {"name": "Build & App Structure", "path": "android-architecture/AppStructure.md"},
       {"name": "Interview QnA (Architecture)", "path": "android-architecture/Interview.md"}
@@ -24,7 +25,8 @@
     "path": "build-manifest-resources",
     "files": [
       {"name": "Android Manifest", "path": "build-manifest-resources/Manifest.md"},
-      {"name": "Resource Analysis", "path": "build-manifest-resources/Resources.md"}
+      {"name": "Resource Analysis", "path": "build-manifest-resources/Resources.md"},
+      {"name": "Gradle Deep Dive", "path": "build-manifest-resources/GradleDeepDive.md"}
     ],
     "is_root": false
   },
@@ -54,6 +56,7 @@
       {"name": "Java Concepts", "path": "programming-languages/JavaConcepts.md"},
       {"name": "Java Mechanism", "path": "programming-languages/JavaMechanism.md"},
       {"name": "Kotlin Concepts", "path": "programming-languages/KotlinConcepts.md"},
+      {"name": "Coroutines & Flow", "path": "programming-languages/CoroutinesFlow.md"},
       {"name": "Kotlin vs Java Concepts", "path": "programming-languages/KotlinJavaConcepts.md"},
       {"name": "Interoperability", "path": "programming-languages/Interoperability.md"},
       {"name": "JNI (Native Interface)", "path": "programming-languages/JNI.md"},
@@ -79,8 +82,11 @@
     "path": "android-performance",
     "files": [
       {"name": "Performance Concepts", "path": "performance-optimisation/concepts.md"},
+      {"name": "ART Internals", "path": "android-performance/ART_Internals.md"},
       {"name": "Memory Management", "path": "android-performance/MemoryManagement.md"},
+      {"name": "Process & LMK", "path": "android-performance/ProcessManagement.md"},
       {"name": "UI Rendering", "path": "android-performance/UIRendering.md"},
+      {"name": "Profiling Guide", "path": "android-performance/Profiling.md"},
       {"name": "Interview QnA (Performance)", "path": "android-performance/Interview.md"}
     ],
     "is_root": false
@@ -111,7 +117,8 @@
     "name": "9. Jetpack Compose",
     "path": "jetpack-compose",
     "files": [
-      {"name": "Compose Concepts", "path": "jetpack-compose/ComposeConcepts.md"}
+      {"name": "Compose Concepts", "path": "jetpack-compose/ComposeConcepts.md"},
+      {"name": "Compose Internals", "path": "jetpack-compose/ComposeInternals.md"}
     ],
     "is_root": false
   },
@@ -129,6 +136,7 @@
     "path": "system-design",
     "files": [
       {"name": "Core Concepts", "path": "system-design/concepts.md"},
+      {"name": "Real-World Examples", "path": "system-design/RealWorldExamples.md"},
       {"name": "Example Systems (Interview)", "path": "system-design/interview.md"}
     ],
     "is_root": false

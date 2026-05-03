@@ -47,3 +47,26 @@
 **How to Answer:**
 *   Mention that `allowMainThreadQueries()` is acceptable **only** in tests.
 *   Advise using the **Turbine** library to test `Flow<List<T>>` DAOs so you can insert a row and assert the next emission immediately.
+
+---
+
+### Q5. [UI Testing] What is the "Robot Pattern" and why use it?
+**The Mechanism:**
+*   It separates the **what** (the test scenario) from the **how** (the UI interaction logic).
+*   A "Robot" class defines high-level methods like `typeEmail(email)`, `clickLogin()`, and `assertErrorIsVisible()`.
+*   The test class then uses these robots in a readable DSL style: `loginRobot { typeEmail("test@me.com"); clickLogin() }`.
+
+**How to Answer:**
+*   It makes tests **readable** (even for non-developers).
+*   It improves **maintainability**: if a button ID changes, you only update the Robot class, not 50 different test files.
+
+---
+
+### Q6. [Frameworks] MockK vs. Mockito?
+**The Answer:**
+*   **Mockito:** The industry standard for Java. Works in Kotlin but requires `argumentCaptor` and `whenever` (from Mockito-Kotlin).
+*   **MockK:** Built specifically for Kotlin. Supports **Coroutines** natively (`coEvery`, `coVerify`), **Static Mocks**, and **Final Classes** without extra configuration.
+
+**How to Answer:**
+*   Choose **MockK** for pure Kotlin projects due to its cleaner syntax and first-class coroutine support.
+*   Mention that MockK can be slightly slower in build times compared to Mockito but the developer experience is significantly better.
